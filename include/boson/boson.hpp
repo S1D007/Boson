@@ -9,6 +9,7 @@
 #include "response.hpp"
 #include "controller.hpp"
 #include "error_handler.hpp"
+#include "route_binder.hpp"
 
 
 
