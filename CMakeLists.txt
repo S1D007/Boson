@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
-option(BOSON_BUILD_EXAMPLES "Build example applications" ON)
+option(BOSON_BUILD_EXAMPLES "Build example applications" OFF)
 option(BOSON_WITH_SQLITE "Enable SQLite database support" OFF)
 option(BUILD_TESTS "Build tests" OFF)
 
