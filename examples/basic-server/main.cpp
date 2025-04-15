@@ -1,49 +1,18 @@
-#include "boson/boson.hpp"
+#include "boson/boson.hpp"  // This should include all necessary headers
 #include <iostream>
 #include <string>
 #include <memory>
 #include "../../include/external/json.hpp"
-
+#include "boson/route_binder.hpp"
 
 class UserController : public boson::Controller {
 public:
-    UserController() {
-        
-        registerRoute(boson::HttpMethod::GET, "/", "list_users", 
-            [this](const boson::Request& req, boson::Response& res) {
-                this->listUsers(req, res);
-            });
-        
-        registerRoute(boson::HttpMethod::GET, "/:id", "get_user_by_id", 
-            [this](const boson::Request& req, boson::Response& res) {
-                this->getUserById(req, res);
-            });
-        
-        registerRoute(boson::HttpMethod::POST, "/", "create_user", 
-            [this](const boson::Request& req, boson::Response& res) {
-                this->createUser(req, res);
-            });
-        
-        registerRoute(boson::HttpMethod::PUT, "/:id", "update_user", 
-            [this](const boson::Request& req, boson::Response& res) {
-                this->updateUser(req, res);
-            });
-        
-        registerRoute(boson::HttpMethod::DELETE, "/:id", "delete_user", 
-            [this](const boson::Request& req, boson::Response& res) {
-                this->deleteUser(req, res);
-            });
-    }
+    UserController() = default;
     
     virtual ~UserController() = default;
-    
-    
     std::string basePath() const override {
         return "/users";
     }
-    
-private:
-    
     void listUsers(const boson::Request& req, boson::Response& res) {
         
         nlohmann::json user1 = {
@@ -175,23 +144,16 @@ private:
 };
 
 int main() {
-    
     boson::initialize();
     
-    
     boson::Server app;
-    
-    
     app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
         std::cout << "[" << req.method() << "] " << req.path() << std::endl;
         next();
     });
-    
-    
     app.get("/", [](const boson::Request& req, boson::Response& res) {
         res.send("Welcome to Boson Framework!");
     });
-    
     
     app.get("/json-example", [](const boson::Request& req, boson::Response& res) {
         nlohmann::json nestedData = {
@@ -209,8 +171,6 @@ int main() {
         
         res.jsonObject(exampleJson);
     });
-    
-    
     app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
         try {
             next();
@@ -225,12 +185,9 @@ int main() {
         }
     });
     
-    
     app.get("/error", [](const boson::Request& req, boson::Response& res) {
         throw boson::HttpError("Something went wrong", 500);
     });
-    
-    
     boson::Router apiRouter;
     
     apiRouter.get("/status", [](const boson::Request& req, boson::Response& res) {
@@ -244,13 +201,10 @@ int main() {
         res.jsonObject(statusJson);
     });
     
-    
     apiRouter.get("/echo/:message", [](const boson::Request& req, boson::Response& res) {
         std::string message = req.param("message");
         
-        
         nlohmann::json paramsJson = nlohmann::json::object();
-        
         
         auto queryParams = req.queryParams();
         for (const auto& param : queryParams) {
@@ -265,19 +219,15 @@ int main() {
         res.jsonObject(response);
     });
     
-    
     app.use("/api", apiRouter);
-    
-    
-    boson::Router userRouter;
-    
-    
     auto userController = std::make_shared<UserController>();
-    userController->registerRoutes(userRouter);
-    
-    
-    app.use("", userRouter);
-    
+    auto userRouter = boson::createRouter(userController);
+    userRouter.get("/", &UserController::listUsers)
+             .get("/:id", &UserController::getUserById)
+             .post("/", &UserController::createUser)
+             .put("/:id", &UserController::updateUser)
+             .del("/:id", &UserController::deleteUser);
+    userRouter.mountOn(&app);
     
     std::cout << "Starting server on port 3000..." << std::endl;
     app.configure(3000, "127.0.0.1");
