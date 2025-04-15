@@ -25,6 +25,7 @@ public:
     std::string requestBody;
     std::map<std::string, std::any> customProperties;
     std::string clientIP;
+    std::string originalRequestPath;
     
     void parseMethod(const std::string& firstLine) {
         std::istringstream iss(firstLine);
@@ -227,4 +228,12 @@ void Request::parse() {
     pimpl->parseBody(lines);
 }
 
-} 
+void Request::setOriginalPath(const std::string& path) {
+    pimpl->originalRequestPath = path;
+}
+
+void Request::overridePath(const std::string& path) {
+    pimpl->requestPath = path;
+}
+
+}

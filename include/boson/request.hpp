@@ -1,21 +1,23 @@
 #ifndef BOSON_REQUEST_HPP
 #define BOSON_REQUEST_HPP
 
-#include <string>
-#include <map>
-#include <vector>
-#include <memory>
-#include <any>
 #include "../external/json.hpp"
+#include <any>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
-namespace boson {
+namespace boson
+{
 
 /**
  * @class Request
  * @brief Represents an HTTP request
  */
-class Request {
-public:
+class Request
+{
+  public:
     Request();
     ~Request();
 
@@ -120,7 +122,7 @@ public:
      * @param rawRequest The raw HTTP request
      */
     void setRawRequest(const std::string& rawRequest);
-    
+
     /**
      * @brief Set a route parameter
      * @param name The name of the parameter
@@ -129,15 +131,27 @@ public:
     void setRouteParam(const std::string& name, const std::string& value);
 
     /**
+     * @brief Set the original request path (for internal routing use)
+     * @param path The original path
+     */
+    void setOriginalPath(const std::string& path);
+
+    /**
+     * @brief Temporarily override the request path (for internal routing use)
+     * @param path The new path to use
+     */
+    void overridePath(const std::string& path);
+
+    /**
      * @brief Parse the raw HTTP request
      */
     void parse();
 
-private:
+  private:
     class Impl;
     std::unique_ptr<Impl> pimpl;
 };
 
-} 
+} // namespace boson
 
-#endif 
+#endif

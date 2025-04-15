@@ -33,11 +33,47 @@ public:
     }
     
     /**
+     * @brief Register a GET route handler with middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& get(const std::string& path, const Middleware& middleware, F handler) {
+        registerHandlerWithMiddleware("GET", path, {middleware}, handler);
+        return *this;
+    }
+    
+    /**
+     * @brief Register a GET route handler with multiple middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& get(const std::string& path, const std::vector<Middleware>& middlewares, F handler) {
+        registerHandlerWithMiddleware("GET", path, middlewares, handler);
+        return *this;
+    }
+    
+    /**
      * @brief Register a POST route handler using a controller method
      */
     template<typename F>
     RouteBinder& post(const std::string& path, F handler) {
         registerHandler("POST", path, handler);
+        return *this;
+    }
+    
+    /**
+     * @brief Register a POST route handler with middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& post(const std::string& path, const Middleware& middleware, F handler) {
+        registerHandlerWithMiddleware("POST", path, {middleware}, handler);
+        return *this;
+    }
+    
+    /**
+     * @brief Register a POST route handler with multiple middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& post(const std::string& path, const std::vector<Middleware>& middlewares, F handler) {
+        registerHandlerWithMiddleware("POST", path, middlewares, handler);
         return *this;
     }
     
@@ -51,6 +87,24 @@ public:
     }
     
     /**
+     * @brief Register a PUT route handler with middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& put(const std::string& path, const Middleware& middleware, F handler) {
+        registerHandlerWithMiddleware("PUT", path, {middleware}, handler);
+        return *this;
+    }
+    
+    /**
+     * @brief Register a PUT route handler with multiple middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& put(const std::string& path, const std::vector<Middleware>& middlewares, F handler) {
+        registerHandlerWithMiddleware("PUT", path, middlewares, handler);
+        return *this;
+    }
+    
+    /**
      * @brief Register a DELETE route handler using a controller method
      */
     template<typename F>
@@ -60,11 +114,47 @@ public:
     }
     
     /**
+     * @brief Register a DELETE route handler with middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& del(const std::string& path, const Middleware& middleware, F handler) {
+        registerHandlerWithMiddleware("DELETE", path, {middleware}, handler);
+        return *this;
+    }
+    
+    /**
+     * @brief Register a DELETE route handler with multiple middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& del(const std::string& path, const std::vector<Middleware>& middlewares, F handler) {
+        registerHandlerWithMiddleware("DELETE", path, middlewares, handler);
+        return *this;
+    }
+    
+    /**
      * @brief Register a PATCH route handler using a controller method
      */
     template<typename F>
     RouteBinder& patch(const std::string& path, F handler) {
         registerHandler("PATCH", path, handler);
+        return *this;
+    }
+    
+    /**
+     * @brief Register a PATCH route handler with middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& patch(const std::string& path, const Middleware& middleware, F handler) {
+        registerHandlerWithMiddleware("PATCH", path, {middleware}, handler);
+        return *this;
+    }
+    
+    /**
+     * @brief Register a PATCH route handler with multiple middleware using a controller method
+     */
+    template<typename F>
+    RouteBinder& patch(const std::string& path, const std::vector<Middleware>& middlewares, F handler) {
+        registerHandlerWithMiddleware("PATCH", path, middlewares, handler);
         return *this;
     }
     
@@ -111,11 +201,16 @@ private:
     std::shared_ptr<ControllerT> controller_;
     RouterPtr router_;
     std::string basePath_;
+    
+    /**
+     * @brief Register a route handler using a controller method
+     */
     template<typename F>
     void registerHandler(const std::string& method, const std::string& path, F handler) {
         auto routeHandler = [this, handler](const Request& req, Response& res) {
             (controller_.get()->*handler)(req, res);
         };
+        
         if (method == "GET") {
             router_->get(path, routeHandler);
         } else if (method == "POST") {
@@ -126,6 +221,29 @@ private:
             router_->del(path, routeHandler);
         } else if (method == "PATCH") {
             router_->patch(path, routeHandler);
+        }
+    }
+    
+    /**
+     * @brief Register a route handler with middleware using a controller method
+     */
+    template<typename F>
+    void registerHandlerWithMiddleware(const std::string& method, const std::string& path, 
+                                     const std::vector<Middleware>& middlewares, F handler) {
+        auto routeHandler = [this, handler](const Request& req, Response& res) {
+            (controller_.get()->*handler)(req, res);
+        };
+        
+        if (method == "GET") {
+            router_->get(path, middlewares, routeHandler);
+        } else if (method == "POST") {
+            router_->post(path, middlewares, routeHandler);
+        } else if (method == "PUT") {
+            router_->put(path, middlewares, routeHandler);
+        } else if (method == "DELETE") {
+            router_->del(path, middlewares, routeHandler);
+        } else if (method == "PATCH") {
+            router_->patch(path, middlewares, routeHandler);
         }
     }
 };

@@ -41,12 +41,48 @@ public:
     Router& get(const std::string& path, const RouteHandler& handler);
     
     /**
+     * @brief Register a GET route handler with middleware
+     * @param path The route path
+     * @param middleware The middleware to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& get(const std::string& path, const Middleware& middleware, const RouteHandler& handler);
+    
+    /**
+     * @brief Register a GET route handler with multiple middleware
+     * @param path The route path
+     * @param middlewares The middleware vector to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& get(const std::string& path, const std::vector<Middleware>& middlewares, const RouteHandler& handler);
+    
+    /**
      * @brief Register a POST route handler
      * @param path The route path
      * @param handler The handler function
      * @return Reference to this router for method chaining
      */
     Router& post(const std::string& path, const RouteHandler& handler);
+    
+    /**
+     * @brief Register a POST route handler with middleware
+     * @param path The route path
+     * @param middleware The middleware to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& post(const std::string& path, const Middleware& middleware, const RouteHandler& handler);
+    
+    /**
+     * @brief Register a POST route handler with multiple middleware
+     * @param path The route path
+     * @param middlewares The middleware vector to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& post(const std::string& path, const std::vector<Middleware>& middlewares, const RouteHandler& handler);
     
     /**
      * @brief Register a PUT route handler
@@ -57,6 +93,24 @@ public:
     Router& put(const std::string& path, const RouteHandler& handler);
     
     /**
+     * @brief Register a PUT route handler with middleware
+     * @param path The route path
+     * @param middleware The middleware to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& put(const std::string& path, const Middleware& middleware, const RouteHandler& handler);
+    
+    /**
+     * @brief Register a PUT route handler with multiple middleware
+     * @param path The route path
+     * @param middlewares The middleware vector to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& put(const std::string& path, const std::vector<Middleware>& middlewares, const RouteHandler& handler);
+    
+    /**
      * @brief Register a DELETE route handler
      * @param path The route path
      * @param handler The handler function
@@ -65,12 +119,48 @@ public:
     Router& del(const std::string& path, const RouteHandler& handler);
     
     /**
+     * @brief Register a DELETE route handler with middleware
+     * @param path The route path
+     * @param middleware The middleware to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& del(const std::string& path, const Middleware& middleware, const RouteHandler& handler);
+    
+    /**
+     * @brief Register a DELETE route handler with multiple middleware
+     * @param path The route path
+     * @param middlewares The middleware vector to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& del(const std::string& path, const std::vector<Middleware>& middlewares, const RouteHandler& handler);
+    
+    /**
      * @brief Register a PATCH route handler
      * @param path The route path
      * @param handler The handler function
      * @return Reference to this router for method chaining
      */
     Router& patch(const std::string& path, const RouteHandler& handler);
+    
+    /**
+     * @brief Register a PATCH route handler with middleware
+     * @param path The route path
+     * @param middleware The middleware to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& patch(const std::string& path, const Middleware& middleware, const RouteHandler& handler);
+    
+    /**
+     * @brief Register a PATCH route handler with multiple middleware
+     * @param path The route path
+     * @param middlewares The middleware vector to apply
+     * @param handler The handler function
+     * @return Reference to this router for method chaining
+     */
+    Router& patch(const std::string& path, const std::vector<Middleware>& middlewares, const RouteHandler& handler);
     
     /**
      * @brief Add middleware to the router
@@ -123,23 +213,35 @@ private:
     Router& addRoute(const std::string& method, const std::string& path, const RouteHandler& handler);
     
     /**
-     * @brief Match a path against a route pattern
-     * @param pattern The route pattern
-     * @param path The request path
-     * @return True if the path matches the pattern, false otherwise
+     * @brief Add a route with middleware
+     * @param method The HTTP method
+     * @param path The route path
+     * @param handler The handler function
+     * @param middleware The middleware vector to apply
+     * @return Reference to this router for method chaining
      */
-    bool matchPath(const std::string& pattern, const std::string& path) const;
+    Router& addRouteWithMiddleware(const std::string& method, const std::string& path, 
+                                  const RouteHandler& handler,
+                                  const std::vector<Middleware>& middleware);
     
     /**
-     * @brief Match a path against a route pattern and extract parameters
+     * @brief Match a path against a route pattern
      * @param pattern The route pattern
      * @param path The request path
      * @param params Map to store extracted parameters
      * @return True if the path matches the pattern, false otherwise
      */
     bool matchPath(const std::string& pattern, const std::string& path, std::map<std::string, std::string>& params) const;
+    
+    /**
+     * @brief Match a path against a route pattern
+     * @param pattern The route pattern
+     * @param path The request path
+     * @return True if the path matches the pattern, false otherwise
+     */
+    bool matchPath(const std::string& pattern, const std::string& path) const;
 };
 
 } 
 
-#endif 
+#endif
