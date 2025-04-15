@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 REPO="S1D007/boson"
@@ -14,7 +15,16 @@ else
     exit 1
 fi
 
-TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep tag_name | cut -d '\"' -f4)
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq is required but not installed. Installing jq..."
+  if [[ "$OS" == "darwin" ]]; then
+    brew install jq
+  elif [[ "$OS" == "linux" ]]; then
+    sudo apt-get update && sudo apt-get install -y jq
+  fi
+fi
+
+TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name)
 
 mkdir -p "$INSTALL_DIR"
 TMPDIR=$(mktemp -d)
@@ -33,11 +43,7 @@ fi
 echo "Boson CLI installed successfully!"
 echo "Run 'boson --help' to get started."
 
-UPDATE_SNIPPET="
-if command -v boson >/dev/null 2>&1; then
-  boson update >/dev/null 2>&1
-fi
-"
+UPDATE_SNIPPET="\n# Boson CLI auto-update\nif command -v boson >/dev/null 2>&1; then\n  boson update >/dev/null 2>&1\nfi\n"
 if ! grep -q 'Boson CLI auto-update' "$HOME/.bashrc"; then
     echo "$UPDATE_SNIPPET" >> "$HOME/.bashrc"
 fi
