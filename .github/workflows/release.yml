@@ -1,0 +1,100 @@
+name: Boson Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C++ library (macOS)
+        run: |
+          mkdir build && cd build
+          cmake ..
+          make
+      - name: Build CLI (macOS)
+        run: |
+          cd cli
+          go build -o boson
+      - name: Package (macOS)
+        run: |
+          mkdir -p dist/include
+          cp -r include/boson dist/include/
+          cp build/src/libboson.a dist/
+          cp cli/boson dist/
+          cd dist && tar -czvf boson-macos.tar.gz *
+      - uses: actions/upload-artifact@v4
+        with:
+          name: boson-macos
+          path: dist/boson-macos.tar.gz
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C++ library (Linux)
+        run: |
+          mkdir build && cd build
+          cmake ..
+          make
+      - name: Build CLI (Linux)
+        run: |
+          cd cli
+          go build -o boson
+      - name: Package (Linux)
+        run: |
+          mkdir -p dist/include
+          cp -r include/boson dist/include/
+          cp build/src/libboson.a dist/
+          cp cli/boson dist/
+          cd dist && tar -czvf boson-linux.tar.gz *
+      - uses: actions/upload-artifact@v4
+        with:
+          name: boson-linux
+          path: dist/boson-linux.tar.gz
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C++ library (Windows)
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+      - name: Build CLI (Windows)
+        run: |
+          cd cli
+          go build -o boson.exe
+      - name: Package (Windows)
+        run: |
+          mkdir dist
+          xcopy include\boson dist\include\boson /E /I
+          copy build\src\Debug\boson.lib dist\
+          copy cli\boson.exe dist\
+          cd dist && tar -czvf boson-windows.tar.gz *
+      - uses: actions/upload-artifact@v4
+        with:
+          name: boson-windows
+          path: dist/boson-windows.tar.gz
+
+  release:
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/boson-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
