@@ -2,11 +2,12 @@
 #define BOSON_MIDDLEWARE_HPP
 
 #include <functional>
-#include <vector>
 #include <memory>
 #include <string>
+#include <vector>
 
-namespace boson {
+namespace boson
+{
 
 class Request;
 class Response;
@@ -24,35 +25,36 @@ using Middleware = std::function<void(const Request&, Response&, NextFunction&)>
  * @class NextFunction
  * @brief Represents the next middleware in the chain
  */
-class NextFunction {
-public:
+class NextFunction
+{
+  public:
     NextFunction();
     ~NextFunction();
-    
+
     /**
      * @brief Call the next middleware
      */
     void operator()();
-    
+
     /**
      * @brief Call the next middleware with an error
      * @param error The error to pass
      */
     void operator()(const std::string& error);
-    
+
     /**
      * @brief Set the next middleware
      * @param middleware The next middleware function
      */
     void setNext(const Middleware& middleware);
-    
+
     /**
      * @brief Check if there is a next middleware
      * @return True if there is a next middleware, false otherwise
      */
     bool hasNext() const;
 
-private:
+  private:
     class Impl;
     std::unique_ptr<Impl> pimpl;
 };
@@ -61,17 +63,18 @@ private:
  * @class MiddlewareChain
  * @brief Manages a chain of middleware
  */
-class MiddlewareChain {
-public:
+class MiddlewareChain
+{
+  public:
     MiddlewareChain();
     ~MiddlewareChain();
-    
+
     /**
      * @brief Add middleware to the chain
      * @param middleware The middleware to add
      */
     void add(const Middleware& middleware);
-    
+
     /**
      * @brief Execute the middleware chain
      * @param req The HTTP request
@@ -80,10 +83,10 @@ public:
      */
     bool execute(const Request& req, Response& res);
 
-private:
+  private:
     std::vector<Middleware> chain;
 };
 
-} 
+} // namespace boson
 
-#endif 
+#endif

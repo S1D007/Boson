@@ -1,32 +1,34 @@
 #ifndef BOSON_ERROR_HANDLER_HPP
 #define BOSON_ERROR_HANDLER_HPP
 
-#include <string>
-#include <functional>
-#include <memory>
-#include <exception>
-#include <stdexcept>
 #include "request.hpp"
 #include "response.hpp"
+#include <exception>
+#include <functional>
+#include <memory>
+#include <stdexcept>
+#include <string>
 
-namespace boson {
+namespace boson
+{
 
 /**
  * @class HttpError
  * @brief Base class for HTTP errors
  */
-class HttpError : public std::runtime_error {
-public:
+class HttpError : public std::runtime_error
+{
+  public:
     explicit HttpError(const std::string& message, int statusCode = 500);
     virtual ~HttpError() = default;
-    
+
     /**
      * @brief Get the HTTP status code
      * @return The HTTP status code
      */
     int statusCode() const;
-    
-private:
+
+  private:
     int code;
 };
 
@@ -34,8 +36,9 @@ private:
  * @class BadRequestError
  * @brief Error for 400 Bad Request
  */
-class BadRequestError : public HttpError {
-public:
+class BadRequestError : public HttpError
+{
+  public:
     explicit BadRequestError(const std::string& message);
 };
 
@@ -43,8 +46,9 @@ public:
  * @class UnauthorizedError
  * @brief Error for 401 Unauthorized
  */
-class UnauthorizedError : public HttpError {
-public:
+class UnauthorizedError : public HttpError
+{
+  public:
     explicit UnauthorizedError(const std::string& message);
 };
 
@@ -52,8 +56,9 @@ public:
  * @class ForbiddenError
  * @brief Error for 403 Forbidden
  */
-class ForbiddenError : public HttpError {
-public:
+class ForbiddenError : public HttpError
+{
+  public:
     explicit ForbiddenError(const std::string& message);
 };
 
@@ -61,8 +66,9 @@ public:
  * @class NotFoundError
  * @brief Error for 404 Not Found
  */
-class NotFoundError : public HttpError {
-public:
+class NotFoundError : public HttpError
+{
+  public:
     explicit NotFoundError(const std::string& message);
 };
 
@@ -82,6 +88,6 @@ using ErrorHandler = std::function<void(const std::exception&, const Request&, R
  */
 void defaultErrorHandler(const std::exception& err, const Request& req, Response& res);
 
-} 
+} // namespace boson
 
-#endif 
+#endif

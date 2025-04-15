@@ -1,22 +1,24 @@
 #ifndef BOSON_RESPONSE_HPP
 #define BOSON_RESPONSE_HPP
 
-#include <string>
-#include <map>
-#include <vector>
-#include <memory>
+#include "../external/json.hpp"
 #include <any>
 #include <initializer_list>
-#include "../external/json.hpp"
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
-namespace boson {
+namespace boson
+{
 
 /**
  * @class Response
  * @brief Represents an HTTP response
  */
-class Response {
-public:
+class Response
+{
+  public:
     Response();
     ~Response();
 
@@ -33,21 +35,21 @@ public:
      * @return Reference to this response for method chaining
      */
     Response& json(const std::any& json);
-    
+
     /**
      * @brief Send a JSON response from a nlohmann::json object
      * @param jsonObj The nlohmann::json object to send
      * @return Reference to this response for method chaining
      */
     Response& jsonObject(const nlohmann::json& jsonObj);
-    
+
     /**
      * @brief Send a JSON response using a JavaScript-like object notation
      * @param items List of key-value pairs forming a JSON object
      * @return Reference to this response for method chaining
      */
     Response& json(std::initializer_list<std::pair<std::string, nlohmann::json>> items);
-    
+
     /**
      * @brief Send a JSON array response
      * @param items List of values forming a JSON array
@@ -122,11 +124,11 @@ public:
      */
     std::string getBody() const;
 
-private:
+  private:
     class Impl;
     std::unique_ptr<Impl> pimpl;
 };
 
-} 
+} // namespace boson
 
 #endif
