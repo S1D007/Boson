@@ -29,6 +29,7 @@ jobs:
         run: |
           mkdir -p dist/include
           cp -r include/boson dist/include/
+          cp -r include/boson/external dist/include/boson/
           cp build/src/libboson.a dist/
           cp cli/boson dist/
           cd dist && tar -czvf boson-macos.tar.gz *
@@ -60,6 +61,7 @@ jobs:
         run: |
           mkdir -p dist/include
           cp -r include/boson dist/include/
+          cp -r include/boson/external dist/include/boson/
           cp build/src/libboson.a dist/
           cp cli/boson dist/
           cd dist && tar -czvf boson-linux.tar.gz *
@@ -95,6 +97,7 @@ jobs:
         run: |
           mkdir dist
           xcopy include\boson dist\include\boson /E /I
+          xcopy include\boson\external dist\include\boson\external /E /I
           copy build\src\Debug\boson.lib dist\
           copy cli\boson.exe dist\
           cd dist && tar -czvf boson-windows.tar.gz *
