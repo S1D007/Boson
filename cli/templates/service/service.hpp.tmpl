@@ -1,0 +1,49 @@
+#pragma once
+
+#include <vector>
+#include <memory>
+#include <string>
+#include <optional>
+#include <stdexcept>
+
+/**
+ * @class {{.Name}}Service
+ * @brief Service for {{.LowerName}}-related operations
+ */
+class {{.Name}}Service {
+public:
+    /**
+     * @brief Default constructor
+     */
+    {{.Name}}Service() = default;
+    
+    /**
+     * @brief Initialize the service
+     * @return True if initialization was successful
+     */
+    bool initialize() {
+        
+        return true;
+    }
+    
+    /**
+     * @brief Shutdown the service
+     */
+    void shutdown() {
+        
+    }
+    
+    /**
+     * @brief Example service method
+     * @param param An example parameter
+     * @return An example return value
+     */
+    std::string performOperation(const std::string& param) {
+        
+        return "Operation performed with parameter: " + param;
+    }
+    
+private:
+    
+    
+};

@@ -1,0 +1,39 @@
+#pragma once
+
+#include <boson/router.hpp>
+#include <memory>
+
+/**
+ * @class {{.Name}}Router
+ * @brief Router for {{.LowerName}}-related routes
+ */
+class {{.Name}}Router {
+public:
+    /**
+     * @brief Configure routes for this router
+     * @param router The router to configure
+     */
+    static void configureRoutes(boson::Router& router) {
+        
+        router.get("/{{.LowerName}}", [](const boson::Request& req, boson::Response& res) {
+            res.json(nlohmann::json{{"message", "{{.Name}} router GET endpoint"}});
+        });
+        
+        
+        router.post("/{{.LowerName}}", [](const boson::Request& req, boson::Response& res) {
+            res.json({{"message", "{{.Name}} router POST endpoint"}});
+        });
+        
+        
+        router.put("/{{.LowerName}}/:id", [](const boson::Request& req, boson::Response& res) {
+            std::string id = req.param("id");
+            res.json({{"message", "{{.Name}} router PUT endpoint with ID: " + id}});
+        });
+        
+        
+        router.delete_("/{{.LowerName}}/:id", [](const boson::Request& req, boson::Response& res) {
+            std::string id = req.param("id");
+            res.json({{"message", "{{.Name}} router DELETE endpoint with ID: " + id}});
+        });
+    }
+};

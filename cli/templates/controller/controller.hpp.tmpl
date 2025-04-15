@@ -1,0 +1,98 @@
+#pragma once
+
+#include <boson/controller.hpp>
+#include <boson/request.hpp>
+#include <boson/response.hpp>
+#include <string>
+
+/**
+ * @class {{.Name}}Controller
+ * @brief Controller for {{.LowerName}} related endpoints
+ */
+class {{.Name}}Controller : public boson::Controller {
+public:
+    /**
+     * @brief Register routes with the router
+     */
+    void registerRoutes() override {
+        
+        GET("/{{.LowerName}}", &{{.Name}}Controller::getAll);
+        GET("/{{.LowerName}}/{id}", &{{.Name}}Controller::getById);
+        POST("/{{.LowerName}}", &{{.Name}}Controller::create);
+        PUT("/{{.LowerName}}/{id}", &{{.Name}}Controller::update);
+        DELETE("/{{.LowerName}}/{id}", &{{.Name}}Controller::remove);
+    }
+
+    /**
+     * @brief Get all {{.LowerName}}s
+     * @param request The HTTP request
+     * @return The HTTP response
+     */
+    boson::Response getAll(const boson::Request& request) {
+        
+        nlohmann::json response = {
+            {"message", "Get all {{.LowerName}}s"}
+        };
+        return boson::Response::ok().json(response);
+    }
+
+    /**
+     * @brief Get {{.LowerName}} by ID
+     * @param request The HTTP request
+     * @return The HTTP response
+     */
+    boson::Response getById(const boson::Request& request) {
+        std::string id = request.param("id");
+        
+        nlohmann::json response = {
+            {"id", id},
+            {"message", "Get {{.LowerName}} by ID"}
+        };
+        return boson::Response::ok().json(response);
+    }
+
+    /**
+     * @brief Create a new {{.LowerName}}
+     * @param request The HTTP request
+     * @return The HTTP response
+     */
+    boson::Response create(const boson::Request& request) {
+        auto json = request.json();
+        
+        nlohmann::json response = {
+            {"message", "{{.Name}} created"}
+        };
+        return boson::Response::created().json(response);
+    }
+
+    /**
+     * @brief Update an existing {{.LowerName}}
+     * @param request The HTTP request
+     * @return The HTTP response
+     */
+    boson::Response update(const boson::Request& request) {
+        std::string id = request.param("id");
+        auto json = request.json();
+        
+        nlohmann::json response = {
+            {"id", id},
+            {"message", "{{.Name}} updated"}
+        };
+        return boson::Response::ok().json(response);
+    }
+
+    /**
+     * @brief Remove a {{.LowerName}}
+     * @param request The HTTP request
+     * @return The HTTP response
+     */
+    boson::Response remove(const boson::Request& request) {
+        std::string id = request.param("id");
+        
+        nlohmann::json response = {
+            {"id", id},
+            {"message", "{{.Name}} deleted"}
+        };
+        return boson::Response::ok().json(response);
+    }
+};

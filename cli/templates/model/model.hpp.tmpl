@@ -1,0 +1,61 @@
+#pragma once
+
+#include <string>
+#include "../external/json.hpp"
+
+/**
+ * @class {{.Name}}
+ * @brief Represents a {{.LowerName}} entity
+ */
+class {{.Name}} {
+public:
+    /**
+     * @brief Default constructor
+     */
+    {{.Name}}() = default;
+    
+    /**
+     * @brief Constructor with parameters
+     */
+    {{.Name}}(const std::string& id) : id_(id) {}
+    
+    /**
+     * @brief Get the ID
+     * @return The ID
+     */
+    const std::string& id() const { return id_; }
+    
+    /**
+     * @brief Set the ID
+     * @param id The new ID
+     */
+    void setId(const std::string& id) { id_ = id; }
+    
+    /**
+     * @brief Convert to JSON object
+     * @return JSON representation of the {{.LowerName}}
+     */
+    nlohmann::json toJson() const {
+        return {
+            {"id", id_}
+        };
+    }
+    
+    /**
+     * @brief Create from JSON object
+     * @param json The JSON object
+     * @return A new {{.Name}} instance
+     */
+    static {{.Name}} fromJson(const nlohmann::json& json) {
+        {{.Name}} {{.LowerName}};
+        if (json.contains("id")) {
+            {{.LowerName}}.setId(json["id"]);
+        }
+        
+        return {{.LowerName}};
+    }
+    
+private:
+    std::string id_;
+    
+};

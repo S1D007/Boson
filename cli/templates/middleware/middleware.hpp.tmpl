@@ -1,0 +1,47 @@
+#pragma once
+
+#include <boson/middleware.hpp>
+#include <boson/request.hpp>
+#include <boson/response.hpp>
+#include <iostream>
+#include <chrono>
+#include <iomanip>
+#include <ctime>
+
+/**
+ * @class {{.Name}}Middleware
+ * @brief Middleware for {{.LowerName}} functionality
+ */
+class {{.Name}}Middleware : public boson::Middleware {
+public:
+    /**
+     * @brief Process the request
+     * @param request The HTTP request
+     * @param next The next middleware in the chain
+     * @return The HTTP response
+     */
+    boson::Response process(const boson::Request& request, MiddlewareNext next) override {
+        
+        auto start = std::chrono::steady_clock::now();
+        
+        
+        auto now = std::time(nullptr);
+        auto tm = std::localtime(&now);
+        
+        std::cout << "[" << std::put_time(tm, "%Y-%m-%d %H:%M:%S") << "] "
+                  << "{{.Name}}Middleware processing request: " 
+                  << request.method() << " " << request.path() << std::endl;
+        
+        
+        auto response = next(request);
+        
+        
+        auto end = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        
+        std::cout << "[" << std::put_time(tm, "%Y-%m-%d %H:%M:%S") << "] "
+                  << "{{.Name}}Middleware completed in " << duration << "ms" << std::endl;
+        
+        return response;
+    }
+};
