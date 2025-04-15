@@ -25,6 +25,7 @@ add_subdirectory(src)
 if(BOSON_BUILD_EXAMPLES)
     add_subdirectory(examples/basic-server)
     add_subdirectory(examples/json-example)
+    add_subdirectory(examples/basic-api)
 endif()
 
 # Optionally build tests
