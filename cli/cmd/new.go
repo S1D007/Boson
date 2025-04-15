@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/S1D007/boson/pkg/bosonfetch"
 	"github.com/S1D007/boson/pkg/project"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -97,6 +99,28 @@ Examples:
 		fmt.Printf("  • Installing dependencies: %s\n", info(installStatus))
 
 		fmt.Println()
+
+		if !skipDependencies {
+			installDir, err := bosonfetch.GetInstallDir()
+			frameworkExists := false
+			if err == nil {
+				if _, err := os.Stat(filepath.Join(installDir, "libboson.a")); err == nil {
+					frameworkExists = true
+				} else if _, err := os.Stat(filepath.Join(installDir, "boson.lib")); err == nil {
+					frameworkExists = true
+				}
+			}
+			if !frameworkExists {
+				info := color.New(color.FgCyan).SprintFunc()
+				fmt.Printf("%s Boson framework not found. Installing...\n", info("ℹ"))
+				err := bosonfetch.InstallOrUpdateBoson(false)
+				if err != nil {
+					color.Red("Error installing Boson framework: %v", err)
+					return
+				}
+				fmt.Println(color.New(color.FgGreen, color.Bold).Sprint("✓ Boson framework installed!"))
+			}
+		}
 
 		fmt.Printf("  %s Creating project files...", color.YellowString("⟳"))
 
