@@ -6,7 +6,6 @@ set(SOURCES
     response.cpp
     controller.cpp
     error_handler.cpp
-    database/database.cpp
 )
 
 add_library(boson STATIC ${SOURCES})
