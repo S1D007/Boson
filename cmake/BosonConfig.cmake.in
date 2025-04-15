@@ -1,0 +1,14 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/BosonTargets.cmake")
+
+# Include dependencies
+include(CMakeFindDependencyMacro)
+
+# Check for SQLite support
+if(@BOSON_WITH_SQLITE@)
+    find_dependency(SQLite3 REQUIRED)
+endif()
+
+# Set the Boson found variable
+set(Boson_FOUND TRUE)
