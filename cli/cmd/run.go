@@ -118,6 +118,9 @@ Examples:
 			fmt.Println()
 			headerColor.Println("👀 WATCH MODE ENABLED")
 			fmt.Println("  File changes will automatically rebuild and restart the application")
+
+			watchAndReload(currentDir, executable, port, host, headerColor)
+			return
 		}
 
 		fmt.Println()
@@ -144,4 +147,47 @@ func init() {
 	runCmd.Flags().BoolVarP(&buildFirst, "build", "b", true, "Build the application before running")
 	runCmd.Flags().IntVarP(&port, "port", "p", 3000, "Port to run the application on")
 	runCmd.Flags().StringVarP(&host, "host", "H", "127.0.0.1", "Host to run the application on")
+}
+
+// Add file watcher and hot reload logic
+func watchAndReload(projectDir, executable string, port int, host string, headerColor *color.Color) {
+	watchDirs := []string{"src", "include"}
+	var lastRun *os.Process
+	var watcher *utils.FileWatcher
+	var err error
+
+	watcher, err = utils.NewFileWatcher(projectDir, watchDirs)
+	if err != nil {
+		headerColor.Println("Failed to start file watcher:", err)
+		return
+	}
+	defer watcher.Close()
+
+	restart := func() {
+		if lastRun != nil {
+			lastRun.Kill()
+			lastRun.Wait()
+		}
+		headerColor.Println("🔨 Rebuilding application due to file change...")
+		if err := utils.BuildProject(projectDir); err != nil {
+			headerColor.Println("Build failed:", err)
+			return
+		}
+		cmd := exec.Command(executable, fmt.Sprintf("--port=%d", port), fmt.Sprintf("--host=%s", host))
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Start(); err != nil {
+			headerColor.Println("Failed to start application:", err)
+			return
+		}
+		lastRun = cmd.Process
+	}
+
+	restart() // Initial run
+	for {
+		changed := watcher.WaitForChange()
+		if changed {
+			restart()
+		}
+	}
 }
