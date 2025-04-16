@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/user"
@@ -116,6 +117,34 @@ func extractTarGz(src, dest string) error {
 	return nil
 }
 
+func copyDir(src string, dst string) error {
+	entries, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+		if entry.IsDir() {
+			if err := copyDir(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			data, err := ioutil.ReadFile(srcPath)
+			if err != nil {
+				return err
+			}
+			if err := ioutil.WriteFile(dstPath, data, entry.Mode()); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func InstallOrUpdateBoson(force bool) error {
 	installDir, err := getInstallDir()
 	if err != nil {
@@ -155,6 +184,11 @@ func InstallOrUpdateBoson(force bool) error {
 		}
 	} else {
 		return errors.New("unknown asset archive format")
+	}
+	templatesSrc := filepath.Join(installDir, "templates")
+	templatesDst := filepath.Join(installDir, "templates")
+	if _, err := os.Stat(templatesSrc); err == nil {
+		_ = copyDir(templatesSrc, templatesDst)
 	}
 	return nil
 }

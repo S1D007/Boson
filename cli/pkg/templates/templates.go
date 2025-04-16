@@ -9,6 +9,10 @@ import (
 )
 
 func GetTemplateRootPath() string {
+	home, err := os.UserHomeDir()
+	if err == nil {
+		return filepath.Join(home, ".boson", "templates")
+	}
 	_, filename, _, _ := runtime.Caller(0)
 	return filepath.Join(filepath.Dir(filename), "..", "..", "templates")
 }
