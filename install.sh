@@ -27,11 +27,25 @@ fi
 TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name)
 
 mkdir -p "$INSTALL_DIR"
+
+if [ ! -w "$INSTALL_DIR" ]; then
+    echo "No write permission to $INSTALL_DIR. Creating directory with sudo..."
+    sudo mkdir -p "$INSTALL_DIR"
+fi
+
 TMPDIR=$(mktemp -d)
 curl -L "https://github.com/$REPO/releases/download/$TAG/$ASSET" -o "$TMPDIR/$ASSET"
 tar -xzf "$TMPDIR/$ASSET" -C "$TMPDIR"
-mv "$TMPDIR/boson" "$INSTALL_DIR/$CLI_NAME"
-chmod +x "$INSTALL_DIR/$CLI_NAME"
+
+if [ -w "$INSTALL_DIR" ]; then
+    mv "$TMPDIR/boson" "$INSTALL_DIR/$CLI_NAME"
+    chmod +x "$INSTALL_DIR/$CLI_NAME"
+else
+    echo "Using sudo to install Boson CLI to $INSTALL_DIR"
+    sudo mv "$TMPDIR/boson" "$INSTALL_DIR/$CLI_NAME"
+    sudo chmod +x "$INSTALL_DIR/$CLI_NAME"
+fi
+
 rm -rf "$TMPDIR"
 
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
