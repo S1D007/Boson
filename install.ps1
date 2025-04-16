@@ -14,9 +14,30 @@ Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
 Remove-Item $zipPath
 
 if (-not ($env:PATH -like "*$installDir*")) {
-    [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$installDir", [EnvironmentVariableTarget]::User)
-    Write-Host "Added $installDir to PATH. Please restart your terminal."
+    $currentPath = [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::User)
+    if (-not ($currentPath -like "*$installDir*")) {
+        [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$installDir", [EnvironmentVariableTarget]::User)
+    }
 }
 
-Write-Host "Boson CLI installed successfully!"
+$profilePath = $PROFILE
+if (-not (Test-Path $profilePath)) {
+    New-Item -ItemType File -Path $profilePath -Force | Out-Null
+}
+
+$autoUpdateSnippet = @"
+# Boson CLI auto-update
+if (Get-Command boson -ErrorAction SilentlyContinue) {
+    boson update | Out-Null
+}
+"@
+
+$profileContent = Get-Content $profilePath -Raw
+
+if (-not ($profileContent -like "*Boson CLI auto-update*")) {
+    Add-Content -Path $profilePath -Value $autoUpdateSnippet
+}
+
+Write-Host "`n✅ Boson CLI installed successfully!"
 Write-Host "Run 'boson --help' to get started."
+Write-Host "➡️  PATH updated. Restart your terminal for changes to take effect."
