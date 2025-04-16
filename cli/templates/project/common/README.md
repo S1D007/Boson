@@ -1,6 +1,6 @@
 # {{.ProjectName}}
 
-A Boson framework project.
+A web application built with the Boson C++ Web Framework.
 
 ## Getting Started
 
@@ -8,17 +8,19 @@ A Boson framework project.
 
 - CMake 3.14 or higher
 - C++17 compatible compiler
-- Boson framework installed
+- Boson Framework installed
 
 ### Building the Project
 
 ```bash
 mkdir build && cd build
 cmake ..
-cmake --build .
+make
 ```
 
-### Running the Project
+### Running the Application
+
+From the build directory:
 
 ```bash
 ./{{.ProjectName}}
@@ -28,26 +30,18 @@ The server will start at http://localhost:3000
 
 ## Project Structure
 
-```
-{{.ProjectName}}/
-├── CMakeLists.txt            # Project configuration
-├── src/                      # Source code
-│   ├── main.cpp              # Application entry point
-│   ├── controllers/          # Request handlers
-│   │   └── hello_controller.hpp
-│   ├── models/               # Data structures
-│   └── middleware/           # Request/response processors
-└── public/                   # Static files (if any)
-```
+- `src/` - Source code
+  - `controllers/` - Controller classes
+  - `models/` - Data models
+  - `middleware/` - Custom middleware
+- `public/` - Static files (if applicable)
 
-## Adding New Controllers
+## API Endpoints
 
-To add a new controller:
-
-```bash
-boson generate controller my_controller
-```
+- `GET /api` - Welcome message
+- `GET /api/hello` - Returns a hello world message
+- `GET /api/hello/:name` - Returns a personalized hello message
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License

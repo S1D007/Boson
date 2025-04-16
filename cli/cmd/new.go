@@ -17,7 +17,7 @@ var (
 	projectName       string
 	projectType       string
 	skipDependencies  bool
-	availableTypes    = []string{"basic", "api", "full", "websocket"}
+	availableTypes    = []string{"basic", "api", "full"}
 	defaultProjectDir string
 )
 
@@ -65,10 +65,9 @@ Examples:
 			fmt.Println("🧩 " + color.New(color.Bold).Sprint("Project Type"))
 
 			typeDescriptions := map[string]string{
-				"basic":     "A simple Boson application with minimal setup",
-				"api":       "A RESTful API application with JSON endpoints",
-				"full":      "A complete web application with HTML views and API endpoints",
-				"websocket": "A real-time application with WebSocket support",
+				"basic": "A simple Boson application with minimal setup",
+				"api":   "A RESTful API application with JSON endpoints",
+				"full":  "A complete web application with HTML views and API endpoints",
 			}
 
 			for _, t := range availableTypes {

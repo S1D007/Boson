@@ -2,6 +2,7 @@
 
 #include <boson/router.hpp>
 #include <memory>
+#include <external/json.hpp>
 
 /**
  * @class {{.Name}}Router
@@ -14,26 +15,87 @@ public:
      * @param router The router to configure
      */
     static void configureRoutes(boson::Router& router) {
-        
+        // GET route for retrieving all items
         router.get("/{{.LowerName}}", [](const boson::Request& req, boson::Response& res) {
-            res.json(nlohmann::json{{"message", "{{.Name}} router GET endpoint"}});
+            nlohmann::json response = {
+                {"message", "{{.Name}} router GET endpoint"},
+                {"success", true}
+            };
+            res.json(response);
         });
         
-        
+        // POST route for creating a new item
         router.post("/{{.LowerName}}", [](const boson::Request& req, boson::Response& res) {
-            res.json({{"message", "{{.Name}} router POST endpoint"}});
+            auto requestBody = req.json();
+            
+            nlohmann::json response = {
+                {"message", "{{.Name}} router POST endpoint"},
+                {"received", requestBody},
+                {"success", true}
+            };
+            res.status(201).json(response);
         });
         
-        
-        router.put("/{{.LowerName}}/:id", [](const boson::Request& req, boson::Response& res) {
+        // GET route with path parameter for retrieving a specific item
+        router.get("/{{.LowerName}}/{id}", [](const boson::Request& req, boson::Response& res) {
             std::string id = req.param("id");
-            res.json({{"message", "{{.Name}} router PUT endpoint with ID: " + id}});
+            
+            nlohmann::json response = {
+                {"message", "{{.Name}} router GET endpoint for specific item"},
+                {"id", id},
+                {"success", true}
+            };
+            res.json(response);
         });
         
-        
-        router.delete_("/{{.LowerName}}/:id", [](const boson::Request& req, boson::Response& res) {
+        // PUT route for updating an existing item
+        router.put("/{{.LowerName}}/{id}", [](const boson::Request& req, boson::Response& res) {
             std::string id = req.param("id");
-            res.json({{"message", "{{.Name}} router DELETE endpoint with ID: " + id}});
+            auto requestBody = req.json();
+            
+            nlohmann::json response = {
+                {"message", "{{.Name}} router PUT endpoint"},
+                {"id", id},
+                {"received", requestBody},
+                {"success", true}
+            };
+            res.json(response);
         });
+        
+        // DELETE route for removing an item
+        router.del("/{{.LowerName}}/{id}", [](const boson::Request& req, boson::Response& res) {
+            std::string id = req.param("id");
+            
+            nlohmann::json response = {
+                {"message", "{{.Name}} router DELETE endpoint"},
+                {"id", id},
+                {"success", true}
+            };
+            res.json(response);
+        });
+        
+        // Example of using middleware with a route
+        router.get("/{{.LowerName}}/protected", 
+            // Example middleware that checks for authorization
+            [](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+                // Check for auth header
+                if (req.hasHeader("Authorization")) {
+                    next(); // Continue to the handler
+                } else {
+                    // Fix: using nlohmann::json object constructor to avoid double curly braces
+                    nlohmann::json errorJson;
+                    errorJson["error"] = "Unauthorized access";
+                    res.status(401).json(errorJson);
+                    // Do not call next() to stop the middleware chain
+                }
+            },
+            // Actual route handler
+            [](const boson::Request& req, boson::Response& res) {
+                // Fix: using nlohmann::json object constructor to avoid double curly braces
+                nlohmann::json responseJson;
+                responseJson["message"] = "Authorized access to protected {{.LowerName}} resource";
+                res.json(responseJson);
+            }
+        );
     }
 };

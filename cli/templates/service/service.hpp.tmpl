@@ -5,10 +5,14 @@
 #include <string>
 #include <optional>
 #include <stdexcept>
+#include <iostream>
 
 /**
  * @class {{.Name}}Service
- * @brief Service for {{.LowerName}}-related operations
+ * @brief Service for handling {{.LowerName}}-related business logic
+ * 
+ * This service provides operations for managing {{.LowerName}} data and operations,
+ * separating business logic from controllers.
  */
 class {{.Name}}Service {
 public:
@@ -22,7 +26,8 @@ public:
      * @return True if initialization was successful
      */
     bool initialize() {
-        
+        std::cout << "Initializing {{.Name}}Service..." << std::endl;
+        // Add initialization code here (database connections, etc.)
         return true;
     }
     
@@ -30,20 +35,71 @@ public:
      * @brief Shutdown the service
      */
     void shutdown() {
-        
+        std::cout << "Shutting down {{.Name}}Service..." << std::endl;
+        // Add cleanup code here
     }
     
     /**
-     * @brief Example service method
-     * @param param An example parameter
-     * @return An example return value
+     * @brief Get data by ID
+     * @param id The ID of the item to retrieve
+     * @return The item if found, std::nullopt otherwise
      */
-    std::string performOperation(const std::string& param) {
+    std::optional<std::string> getById(const std::string& id) {
+        // This is where you would typically fetch from a database
+        if (id == "invalid") {
+            return std::nullopt;
+        }
         
-        return "Operation performed with parameter: " + param;
+        return "{{.Name}} item with ID: " + id;
+    }
+    
+    /**
+     * @brief Get all items
+     * @return A vector of all items
+     */
+    std::vector<std::string> getAll() {
+        // This is where you would typically fetch all items from a database
+        return {
+            "{{.Name}} item 1",
+            "{{.Name}} item 2",
+            "{{.Name}} item 3"
+        };
+    }
+    
+    /**
+     * @brief Create a new item
+     * @param data The data for the new item
+     * @return The created item data
+     */
+    std::string create(const std::string& data) {
+        // This is where you would typically insert into a database
+        std::cout << "Creating new {{.LowerName}} with data: " << data << std::endl;
+        return "Created {{.LowerName}} with data: " + data;
+    }
+    
+    /**
+     * @brief Update an existing item
+     * @param id The ID of the item to update
+     * @param data The new data for the item
+     * @return True if the update was successful
+     */
+    bool update(const std::string& id, const std::string& data) {
+        // This is where you would typically update a database record
+        std::cout << "Updating {{.LowerName}} " << id << " with data: " << data << std::endl;
+        return id != "invalid";
+    }
+    
+    /**
+     * @brief Delete an item
+     * @param id The ID of the item to delete
+     * @return True if the deletion was successful
+     */
+    bool remove(const std::string& id) {
+        // This is where you would typically delete from a database
+        std::cout << "Removing {{.LowerName}} with ID: " << id << std::endl;
+        return id != "invalid";
     }
     
 private:
-    
-    
+    // Add private member variables here
 };

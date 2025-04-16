@@ -12,15 +12,32 @@
 class {{.Name}}Controller : public boson::Controller {
 public:
     /**
-     * @brief Register routes with the router
+     * @brief Get the base path for this controller
+     * @return The base path
      */
-    void registerRoutes() override {
-        
-        GET("/{{.LowerName}}", &{{.Name}}Controller::getAll);
-        GET("/{{.LowerName}}/{id}", &{{.Name}}Controller::getById);
-        POST("/{{.LowerName}}", &{{.Name}}Controller::create);
-        PUT("/{{.LowerName}}/{id}", &{{.Name}}Controller::update);
-        DELETE("/{{.LowerName}}/{id}", &{{.Name}}Controller::remove);
+    std::string basePath() const override {
+        return "/{{.LowerName}}";
+    }
+    
+    /**
+     * @brief Register routes with a router
+     * @param router The router to register routes with
+     */
+    void registerRoutes(boson::Router& router) override {
+        registerRoute(boson::HttpMethod::GET, "", "getAll", 
+            [this](const boson::Request& req) { return this->getAll(req); });
+            
+        registerRoute(boson::HttpMethod::GET, "/{id}", "getById", 
+            [this](const boson::Request& req) { return this->getById(req); });
+            
+        registerRoute(boson::HttpMethod::POST, "", "create", 
+            [this](const boson::Request& req) { return this->create(req); });
+            
+        registerRoute(boson::HttpMethod::PUT, "/{id}", "update", 
+            [this](const boson::Request& req) { return this->update(req); });
+            
+        registerRoute(boson::HttpMethod::DELETE, "/{id}", "remove", 
+            [this](const boson::Request& req) { return this->remove(req); });
     }
 
     /**
@@ -29,7 +46,7 @@ public:
      * @return The HTTP response
      */
     boson::Response getAll(const boson::Request& request) {
-        
+        // Here you would typically fetch data from a service or database
         nlohmann::json response = {
             {"message", "Get all {{.LowerName}}s"}
         };

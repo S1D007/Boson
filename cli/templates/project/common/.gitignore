@@ -1,16 +1,12 @@
 # Build directories
-build/
-cmake-build-debug/
-cmake-build-release/
+/build/
+/out/
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*~
-
-# Prerequisites
-*.d
+# IDE settings
+/.vscode/
+/.idea/
+/.vs/
+/CMakeSettings.json
 
 # Compiled Object files
 *.slo
@@ -38,9 +34,22 @@ cmake-build-release/
 *.out
 *.app
 
-# macOS specific
-.DS_Store
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CmakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+_deps/
 
-# Dependency directories
-/vcpkg/
-/deps/
+# OS-specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
