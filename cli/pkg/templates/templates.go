@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
 func GetTemplateRootPath() string {
-	home, err := os.UserHomeDir()
-	if err == nil {
-		return filepath.Join(home, ".boson", "templates")
+	execPath, err := os.Executable()
+	if err != nil {
+		panic(fmt.Errorf("failed to get executable path: %w", err))
 	}
-	_, filename, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(filename), "..", "..", "templates")
+	return filepath.Join(filepath.Dir(execPath), "templates")
 }
 
 var TemplateRoot = GetTemplateRootPath()
