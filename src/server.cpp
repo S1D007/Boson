@@ -1,3 +1,35 @@
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+using socket_t = SOCKET;
+#define SOCKET_ERROR_VALUE INVALID_SOCKET
+#ifndef EAGAIN
+#define EAGAIN WSAEWOULDBLOCK
+#endif
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+inline int close_socket(SOCKET socket) { return closesocket(socket); }
+#else
+#ifdef __APPLE__
+#include <sys/event.h>
+#endif
+#ifdef __linux__
+#include <sys/epoll.h>
+#endif
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+using socket_t = int;
+#define SOCKET_ERROR_VALUE (-1)
+inline int close_socket(int fd) { return ::close(fd); }
+#endif
+
 #include "boson/server.hpp"
 #include "boson/error_handler.hpp"
 #include "boson/middleware.hpp"
@@ -17,36 +49,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
-using socket_t = SOCKET;
-#define SOCKET_ERROR_VALUE INVALID_SOCKET
-#ifndef EAGAIN
-#define EAGAIN WSAEWOULDBLOCK
-#endif
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#endif
-inline int close_socket(SOCKET socket) { return closesocket(socket); }
-#else
-// POSIX (macOS, Linux, etc)
-#ifdef __APPLE__
-#include <sys/event.h> // Needed for kqueue, kevent, EV_SET, etc.
-#endif
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-using socket_t = int;
-#define SOCKET_ERROR_VALUE (-1)
-inline int close_socket(int fd) { return ::close(fd); }
-#endif
 
 namespace boson
 {
@@ -652,7 +654,7 @@ void Connection::processRequest()
         for (const auto& middleware : middleware_)
         {
             NextFunction next;
-            next.setNext([&continueProcessing](const Request&, Response&, NextFunction&)
+            next.setNext([&continueProcessing](const Request& req, Response& res, NextFunction& nf)
                          { continueProcessing = true; });
 
             middleware(request, response, next);
