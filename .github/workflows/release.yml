@@ -24,7 +24,10 @@ jobs:
       - name: Build CLI (macOS)
         run: |
           cd cli
-          go build -o boson
+          VERSION=${GITHUB_REF#refs/tags/v}
+          BUILD_DATE=$(date -u +"%Y-%m-%d")
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+          go build -ldflags="-X 'github.com/S1D007/boson/cmd.Version=$VERSION' -X 'github.com/S1D007/boson/cmd.BuildDate=$BUILD_DATE' -X 'github.com/S1D007/boson/cmd.GitCommit=$GIT_COMMIT'" -o boson
       - name: Package (macOS)
         run: |
           mkdir -p dist/include
@@ -57,7 +60,10 @@ jobs:
       - name: Build CLI (Linux)
         run: |
           cd cli
-          go build -o boson
+          VERSION=${GITHUB_REF#refs/tags/v}
+          BUILD_DATE=$(date -u +"%Y-%m-%d")
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+          go build -ldflags="-X 'github.com/S1D007/boson/cmd.Version=$VERSION' -X 'github.com/S1D007/boson/cmd.BuildDate=$BUILD_DATE' -X 'github.com/S1D007/boson/cmd.GitCommit=$GIT_COMMIT'" -o boson
       - name: Package (Linux)
         run: |
           mkdir -p dist/include
@@ -94,7 +100,10 @@ jobs:
       - name: Build CLI (Windows)
         run: |
           cd cli
-          go build -o boson.exe
+          $VERSION = $env:GITHUB_REF -replace 'refs/tags/v', ''
+          $BUILD_DATE = Get-Date -Format "yyyy-MM-dd"
+          $GIT_COMMIT = git rev-parse --short HEAD
+          go build -ldflags="-X 'github.com/S1D007/boson/cmd.Version=$VERSION' -X 'github.com/S1D007/boson/cmd.BuildDate=$BUILD_DATE' -X 'github.com/S1D007/boson/cmd.GitCommit=$GIT_COMMIT'" -o boson.exe
       - name: Package (Windows)
         run: |
           mkdir dist
