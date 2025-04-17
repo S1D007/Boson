@@ -69,8 +69,3 @@ fi
 echo ""
 echo "📦 Optional: To enable auto-update, add the following snippet to your shell config:"
 echo ""
-echo "  # Boson CLI auto-update"
-echo "  if command -v boson >/dev/null 2>&1; then
-    boson update >/dev/null 2>&1"
-  fi
-echo ""
