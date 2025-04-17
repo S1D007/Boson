@@ -1,43 +1,58 @@
-$repo = "S1D007/boson"
-$cliName = "boson.exe"
-$installDir = "$env:USERPROFILE\.boson\bin"
-$asset = "boson-windows.zip"
+$Repo = "S1D007/boson"
+$CliName = "boson.exe"
+$InstallDir = "$env:USERPROFILE\.boson"
 
-$tag = (Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest").tag_name
+# Create install directory if it doesn't exist
+if (-not (Test-Path $InstallDir)) {
+    New-Item -ItemType Directory -Path $InstallDir | Out-Null
+}
 
-New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+Write-Host "Fetching latest release info..." -ForegroundColor Cyan
+$headers = @{
+    "Accept" = "application/json"
+}
+$latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers $headers
+$tag = $latestRelease.tag_name
 
-$tmp = New-TemporaryFile
-$zipPath = "$($tmp.FullName).zip"
-Invoke-WebRequest -Uri "https://github.com/$repo/releases/download/$tag/$asset" -OutFile $zipPath
-Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
-Remove-Item $zipPath
+$asset = "boson-windows.tar.gz"
+$assetUrl = "https://github.com/$Repo/releases/download/$tag/$asset"
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.Guid]::NewGuid().ToString())
+New-Item -ItemType Directory -Path $tempDir | Out-Null
 
-if (-not ($env:PATH -like "*$installDir*")) {
-    $currentPath = [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::User)
-    if (-not ($currentPath -like "*$installDir*")) {
-        [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$installDir", [EnvironmentVariableTarget]::User)
+Write-Host "Downloading Boson CLI version $tag..." -ForegroundColor Cyan
+$downloadPath = Join-Path $tempDir $asset
+Invoke-WebRequest -Uri $assetUrl -OutFile $downloadPath
+
+Write-Host "Extracting files..." -ForegroundColor Cyan
+tar -xzf $downloadPath -C $tempDir
+
+Write-Host "Installing Boson CLI..." -ForegroundColor Cyan
+Copy-Item -Path (Join-Path $tempDir $CliName) -Destination (Join-Path $InstallDir $CliName) -Force
+
+if (Test-Path (Join-Path $tempDir "templates")) {
+    # Remove existing templates directory completely
+    if (Test-Path (Join-Path $InstallDir "templates")) {
+        Remove-Item -Path (Join-Path $InstallDir "templates") -Recurse -Force
     }
+    
+    # Copy templates directory with all subdirectories and files
+    Copy-Item -Path (Join-Path $tempDir "templates") -Destination $InstallDir -Recurse -Force
+    Write-Host "Templates installed successfully to $InstallDir\templates" -ForegroundColor Green
+} else {
+    Write-Host "Warning: Templates directory not found in the package" -ForegroundColor Yellow
 }
 
-$profilePath = $PROFILE
-if (-not (Test-Path $profilePath)) {
-    New-Item -ItemType File -Path $profilePath -Force | Out-Null
+# Clean up
+Remove-Item -Path $tempDir -Recurse -Force
+
+# Add to PATH if not already present
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if (-not $currentPath.Contains($InstallDir)) {
+    Write-Host "Adding Boson CLI to your PATH..." -ForegroundColor Cyan
+    [Environment]::SetEnvironmentVariable("Path", "$currentPath;$InstallDir", "User")
+    $env:Path = "$env:Path;$InstallDir"
+    Write-Host "Boson CLI added to PATH. Note that you may need to restart your terminal for this change to take effect." -ForegroundColor Yellow
 }
 
-$autoUpdateSnippet = @"
-# Boson CLI auto-update
-if (Get-Command boson -ErrorAction SilentlyContinue) {
-    boson update | Out-Null
-}
-"@
-
-$profileContent = Get-Content $profilePath -Raw
-
-if (-not ($profileContent -like "*Boson CLI auto-update*")) {
-    Add-Content -Path $profilePath -Value $autoUpdateSnippet
-}
-
-Write-Host "`n✅ Boson CLI installed successfully!"
-Write-Host "Run 'boson --help' to get started."
-Write-Host "➡️  PATH updated. Restart your terminal for changes to take effect."
+Write-Host "Boson CLI installed successfully!" -ForegroundColor Green
+Write-Host "Run 'boson --help' to get started." -ForegroundColor Green
