@@ -87,11 +87,39 @@ func GetProjectTemplates(projectType string) (map[string]string, error) {
 		}
 		fullTemplates["src/services/user_service.hpp"] = userServiceContent
 
-		layoutViewContent, err := loadFile(filepath.Join(TemplateRoot, "project", "full", "layout.hpp"))
+		apiControllerContent, err := loadFile(filepath.Join(TemplateRoot, "project", "api", "api_controller.hpp"))
 		if err != nil {
 			return nil, err
 		}
+		fullTemplates["src/controllers/api_controller.hpp"] = apiControllerContent
+
+		viewControllerContent, err := loadFile(filepath.Join(TemplateRoot, "project", "full", "controllers", "view_controller.hpp"))
+		if err != nil {
+			viewControllerContent, err = loadFile(filepath.Join(TemplateRoot, "project", "full", "view_controller.hpp"))
+			if err != nil {
+				return nil, err
+			}
+		}
+		fullTemplates["src/controllers/view_controller.hpp"] = viewControllerContent
+
+		layoutViewContent, err := loadFile(filepath.Join(TemplateRoot, "project", "full", "views", "layout.hpp"))
+		if err != nil {
+			layoutViewContent, err = loadFile(filepath.Join(TemplateRoot, "project", "full", "layout.hpp"))
+			if err != nil {
+				return nil, err
+			}
+		}
 		fullTemplates["src/views/layout.hpp"] = layoutViewContent
+
+		authMiddlewareContent, err := loadFile(filepath.Join(TemplateRoot, "project", "full", "middleware", "auth_middleware.hpp"))
+		if err == nil {
+			fullTemplates["src/middleware/auth_middleware.hpp"] = authMiddlewareContent
+		}
+
+		loggerMiddlewareContent, err := loadFile(filepath.Join(TemplateRoot, "project", "full", "middleware", "logger_middleware.hpp"))
+		if err == nil {
+			fullTemplates["src/middleware/logger_middleware.hpp"] = loggerMiddlewareContent
+		}
 
 		indexHtmlContent, err := loadFile(filepath.Join(TemplateRoot, "project", "full", "index.html"))
 		if err != nil {
@@ -110,6 +138,11 @@ func GetProjectTemplates(projectType string) (map[string]string, error) {
 			return nil, err
 		}
 		fullTemplates["public/js/app.js"] = jsContent
+
+		mainContent, err := loadFile(filepath.Join(TemplateRoot, "project", "full", "main.cpp"))
+		if err == nil {
+			fullTemplates["src/main.cpp"] = mainContent
+		}
 
 		return fullTemplates, nil
 
@@ -188,10 +221,14 @@ func loadFile(path string) (string, error) {
 		altPath := filepath.Join(execDir, "..", "templates", strings.TrimPrefix(path, TemplateRoot))
 
 		if _, err := os.Stat(altPath); os.IsNotExist(err) {
-			return "", fmt.Errorf("template file not found: %s", path)
+			devPath := strings.Replace(path, TemplateRoot, filepath.Join(execDir, "templates"), 1)
+			if _, err := os.Stat(devPath); os.IsNotExist(err) {
+				return "", fmt.Errorf("template file not found: %s (tried %s and %s)", path, altPath, devPath)
+			}
+			path = devPath
+		} else {
+			path = altPath
 		}
-
-		path = altPath
 	}
 
 	content, err := os.ReadFile(path)
