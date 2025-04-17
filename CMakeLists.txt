@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
-option(BOSON_BUILD_EXAMPLES "Build example applications" OFF)
+option(BOSON_BUILD_EXAMPLES "Build example applications" ON)
 option(BOSON_WITH_SQLITE "Enable SQLite database support" OFF)
 option(BUILD_TESTS "Build tests" OFF)
 
@@ -23,6 +23,7 @@ add_subdirectory(src)
 
 # Optionally build examples
 if(BOSON_BUILD_EXAMPLES)
+    add_subdirectory(examples/library-management-app)
     add_subdirectory(examples/basic-server)
     add_subdirectory(examples/json-example)
     add_subdirectory(examples/basic-api)

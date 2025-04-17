@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Management API built with Boson</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.12.0/swagger-ui.css">
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.12.0/favicon-32x32.png" sizes="32x32">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .swagger-ui .topbar { 
+      background-color: #1b1b1b;
+      padding: 10px 0;
+    }
+    .swagger-ui .topbar .wrapper { 
+      display: flex;
+      align-items: center;
+      max-width: 1460px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .swagger-ui .topbar-wrapper img[alt="Swagger UI"] {
+      display: none;
+    }
+    .swagger-ui .topbar-wrapper::before {
+      content: 'Boson Framework';
+      color: #fff;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .custom-header {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .custom-header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      color: #333;
+    }
+    .custom-header p {
+      margin: 10px 0 0;
+      color: #666;
+      font-size: 1.1em;
+    }
+    .logo {
+      max-height: 60px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="custom-header">
+    <h1><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMjJDNi40NzcgMjIgMiAxNy41MjMgMiAxMkMyIDYuNDc3IDYuNDc3IDIgMTIgMkMxNy41MjMgMiAyMiA2LjQ3NyAyMiAxMkMyMiAxNy41MjMgMTcuNTIzIDIyIDEyIDIyWk0xMiAxMEMxMC44OTUgMTAgMTAgMTAuODk1IDEwIDEyQzEwIDEzLjEwNSAxMC44OTUgMTQgMTIgMTRDMTMuMTA1IDE0IDE0IDEzLjEwNSAxNCAxMkMxNCAxMC44OTUgMTMuMTA1IDEwIDEyIDEwWk0xMiA2QzkuNzkgNiA4IDcuNzkgOCAxMEM4IDEwLjU1MiA3LjU1MiAxMSA3IDExQzYuNDQ4IDExIDYgMTAuNTUyIDYgMTBDNiA2LjY4NiA4LjY4NiA0IDEyIDRDMTUuMzE0IDQgMTggNi42ODYgMTggMTBDMTggMTAuNTUyIDE3LjU1MiAxMSAxNyAxMUMxNi40NDggMTEgMTYgMTAuNTUyIDE2IDEwQzE2IDcuNzkgMTQuMjEgNiAxMiA2WiIgZmlsbD0iIzMzMzMzMyI+PC9wYXRoPjwvc3ZnPg==" alt="Boson Logo" class="logo"> Boson Framework API Documentation</h1>
+    <p>Explore the API endpoints and their functionalities.</p>
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.12.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.12.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      // Begin Swagger UI call region
+      const ui = SwaggerUIBundle({
+        url: "./openapi.yaml",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "BaseLayout",
+        tagsSorter: "alpha",
+        operationsSorter: "alpha",
+        docExpansion: "list"
+      });
+      // End Swagger UI call region
+
+      window.ui = ui;
+    };
+  </script>
+</body>
+</html>
