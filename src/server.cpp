@@ -24,10 +24,17 @@
 #pragma comment(lib, "ws2_32.lib")
 using socket_t = SOCKET;
 #define SOCKET_ERROR_VALUE INVALID_SOCKET
-#define EAGAIN WSAEWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
 
-inline int close_socket(socket_t socket) {
+// Don't redefine these macros if they're already defined in Windows
+#ifndef EAGAIN
+#define EAGAIN WSAEWOULDBLOCK
+#endif
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+
+// Use this function for Windows to close a socket
+inline int close_socket(SOCKET socket) {
     return closesocket(socket);
 }
 
@@ -44,11 +51,13 @@ inline int close_socket(socket_t socket) {
 using socket_t = int;
 #define SOCKET_ERROR_VALUE (-1)
 
+// Avoid using macro for close_socket on macOS
 inline int close_socket(int fd) { 
     return ::close(fd); 
 }
 
 #else
+// Linux and other UNIX-like systems
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -119,10 +128,10 @@ public:
           isWriting_(false), state_(State::READ_REQUEST) {}
 
     ~Connection() {
-        close();
+        closeConnection();
     }
 
-    void close() {
+    void closeConnection() {
         if (socket_ != SOCKET_ERROR_VALUE) {
             close_socket(socket_);
             socket_ = SOCKET_ERROR_VALUE;
