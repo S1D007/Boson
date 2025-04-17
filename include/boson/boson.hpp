@@ -9,6 +9,7 @@
 #include "route_binder.hpp"
 #include "router.hpp"
 #include "server.hpp"
+#include "static_files.hpp"
 
 namespace boson
 {

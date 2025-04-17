@@ -14,10 +14,9 @@ public:
     virtual ~ViewController() = default;
 
     std::string basePath() const override { 
-        return ""; // Root routes 
+        return ""; 
     }
 
-    // Home page
     void home(const boson::Request& req, boson::Response& res) {
         std::string content = R"(
             <section class="hero">
@@ -61,14 +60,12 @@ public:
            .send(Views::Layout::render("Home", content, data));
     }
 
-    // User list page
     void userList(const boson::Request& req, boson::Response& res) {
         auto users = userService->getAllUsers();
         res.header("Content-Type", "text/html")
            .send(Views::Layout::renderUserList(users));
     }
 
-    // User detail page
     void userDetail(const boson::Request& req, boson::Response& res) {
         std::string id = req.param("id");
         
@@ -92,13 +89,11 @@ public:
         }
     }
 
-    // New user form
     void newUserForm(const boson::Request& req, boson::Response& res) {
         res.header("Content-Type", "text/html")
            .send(Views::Layout::renderUserForm());
     }
 
-    // Edit user form
     void editUserForm(const boson::Request& req, boson::Response& res) {
         std::string id = req.param("id");
         

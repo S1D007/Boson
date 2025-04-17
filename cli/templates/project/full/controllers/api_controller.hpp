@@ -16,24 +16,20 @@ public:
         return "/api"; 
     }
 
-    // List all users
     void getUsers(const boson::Request& req, boson::Response& res) {
         auto users = userService->getAllUsers();
         
-        // Create JSON array of users
         nlohmann::json usersArray = nlohmann::json::array();
         for (const auto& user : users) {
             usersArray.push_back(user.toJson());
         }
         
-        // Directly use jsonObject with initializer list
         res.jsonObject({
             {"users", usersArray},
             {"count", users.size()}
         });
     }
 
-    // Get user by ID
     void getUserById(const boson::Request& req, boson::Response& res) {
         std::string id = req.param("id");
         
@@ -41,7 +37,7 @@ public:
             int userId = std::stoi(id);
             auto user = userService->getUserById(userId);
             
-            if (user.id == 0) { // User not found
+            if (user.id == 0) {
                 res.status(404).jsonObject({
                     {"error", "User not found"},
                     {"id", id}
@@ -60,7 +56,6 @@ public:
         }
     }
 
-    // Create a new user
     void createUser(const boson::Request& req, boson::Response& res) {
         try {
             auto requestBody = req.json();
@@ -91,7 +86,6 @@ public:
         }
     }
 
-    // Update user
     void updateUser(const boson::Request& req, boson::Response& res) {
         std::string id = req.param("id");
         
@@ -132,7 +126,6 @@ public:
         }
     }
 
-    // Delete user
     void deleteUser(const boson::Request& req, boson::Response& res) {
         std::string id = req.param("id");
         
