@@ -35,13 +35,21 @@ if [ -w "$INSTALL_DIR" ]; then
   mv "$TMPDIR/$CLI_NAME" "$INSTALL_DIR/$CLI_NAME"
   chmod +x "$INSTALL_DIR/$CLI_NAME"
   if [ -d "$TMPDIR/templates" ]; then
-    cp -r "$TMPDIR/templates" "$INSTALL_DIR/templates"
+    rm -rf "$INSTALL_DIR/templates"
+    cp -a "$TMPDIR/templates" "$INSTALL_DIR/"
+    echo "Templates installed successfully to $INSTALL_DIR/templates"
+  else
+    echo "Warning: Templates directory not found in the package"
   fi
 else
   sudo mv "$TMPDIR/$CLI_NAME" "$INSTALL_DIR/$CLI_NAME"
   sudo chmod +x "$INSTALL_DIR/$CLI_NAME"
   if [ -d "$TMPDIR/templates" ]; then
-    sudo cp -r "$TMPDIR/templates" "$INSTALL_DIR/templates"
+    sudo rm -rf "$INSTALL_DIR/templates"
+    sudo cp -a "$TMPDIR/templates" "$INSTALL_DIR/"
+    echo "Templates installed successfully to $INSTALL_DIR/templates"
+  else
+    echo "Warning: Templates directory not found in the package"
   fi
 fi
 
@@ -62,7 +70,7 @@ echo ""
 echo "📦 Optional: To enable auto-update, add the following snippet to your shell config:"
 echo ""
 echo "  # Boson CLI auto-update"
-echo "  if command -v boson >/dev/null 2>&1; then"
-echo "    boson update >/dev/null 2>&1"
-echo "  fi"
+echo "  if command -v boson >/dev/null 2>&1; then
+    boson update >/dev/null 2>&1"
+  fi
 echo ""
