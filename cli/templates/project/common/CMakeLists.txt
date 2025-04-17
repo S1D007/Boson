@@ -17,6 +17,7 @@ set(BOSON_LIB_PATH_WIN "${BOSON_DIR}/libboson.lib")
 
 file(GLOB_RECURSE SOURCES 
     "src/*.cpp"
+    "src/*.hpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
