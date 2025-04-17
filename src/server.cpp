@@ -15,7 +15,7 @@ inline int close_socket(SOCKET socket) { return closesocket(socket); }
 #ifdef __APPLE__
 #include <sys/event.h>
 #endif
-#ifdef __linux__
+#if defined(__linux__) || (!defined(__APPLE__) && !defined(_WIN32))
 #include <sys/epoll.h>
 #endif
 #include <arpa/inet.h>
