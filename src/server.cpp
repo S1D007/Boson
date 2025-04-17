@@ -100,7 +100,7 @@ class Connection
                const std::vector<Middleware>& middleware, const ErrorHandler& errorHandler)
         : socket_(socket), eventLoop_(eventLoop), router_(router), middleware_(middleware),
           errorHandler_(errorHandler), readBuffer_(16384), writeBuffer_(16384), keepAlive_(true),
-          isWriting_(false), state_(State::READ_REQUEST)
+          isWriting_(false), state_(ConnectionState::READ_REQUEST)
     {
     }
 
@@ -123,7 +123,7 @@ class Connection
     bool isWriting() const { return isWriting_; }
 
   private:
-    enum class State
+    enum class ConnectionState
     {
         READ_REQUEST,
         PROCESS_REQUEST,
@@ -140,7 +140,7 @@ class Connection
     Buffer writeBuffer_;
     bool keepAlive_;
     bool isWriting_;
-    State state_;
+    ConnectionState state_;
 };
 
 class EventLoop
@@ -580,7 +580,7 @@ class EventLoop
 
 bool Connection::onReadable()
 {
-    if (state_ != State::READ_REQUEST)
+    if (state_ != ConnectionState::READ_REQUEST)
         return true;
 
     // Read data from socket
@@ -598,7 +598,7 @@ bool Connection::onReadable()
             if (readBuffer_.size >= 4 &&
                 (strstr(readBuffer_.data, "\r\n\r\n") || strstr(readBuffer_.data, "\n\n")))
             {
-                state_ = State::PROCESS_REQUEST;
+                state_ = ConnectionState::PROCESS_REQUEST;
                 processRequest();
                 return true;
             }
@@ -638,7 +638,7 @@ bool Connection::onReadable()
 
 void Connection::processRequest()
 {
-    if (state_ != State::PROCESS_REQUEST)
+    if (state_ != ConnectionState::PROCESS_REQUEST)
         return;
 
     // Zero-copy parsing - work directly with the buffer
@@ -703,7 +703,7 @@ void Connection::processRequest()
     keepAlive_ = request.header("Connection") != "close";
 
     // Update connection state
-    state_ = State::WRITE_RESPONSE;
+    state_ = ConnectionState::WRITE_RESPONSE;
     isWriting_ = true;
 
     // Register for write events
@@ -715,13 +715,13 @@ void Connection::processRequest()
 
 bool Connection::onWritable()
 {
-    if (state_ != State::WRITE_RESPONSE || !isWriting_)
+    if (state_ != ConnectionState::WRITE_RESPONSE || !isWriting_)
         return true;
 
     // Send data from write buffer
     while (writeBuffer_.size > 0)
     {
-        int bytesSent = send(socket_, writeBuffer_.data, writeBuffer_.size, 0);
+        int bytesSent = send(socket_, writeBuffer_.data, static_cast<int>(writeBuffer_.size), 0);
 
         if (bytesSent > 0)
         {
@@ -762,7 +762,7 @@ bool Connection::onWritable()
     {
         // Reset for next request
         readBuffer_.clear();
-        state_ = State::READ_REQUEST;
+        state_ = ConnectionState::READ_REQUEST;
         return true;
     }
     else
