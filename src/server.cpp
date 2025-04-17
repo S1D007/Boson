@@ -27,7 +27,7 @@ inline int close_socket(SOCKET socket) { return closesocket(socket); }
 #include <errno.h>
 using socket_t = int;
 #define SOCKET_ERROR_VALUE (-1)
-inline int close_socket(int fd) { return ::close(fd); }
+inline int close_socket(int fd) { return close(fd); } // Removed scope resolution operator
 #endif
 
 #include "boson/server.hpp"
@@ -182,13 +182,13 @@ class EventLoop
 #elif defined(__APPLE__) || defined(__MACH__)
         if (kqueueFd_ >= 0)
         {
-            ::close(kqueueFd_);
+            close_socket(kqueueFd_);
             kqueueFd_ = -1;
         }
 #else
         if (epollFd_ >= 0)
         {
-            ::close(epollFd_);
+            close_socket(epollFd_);
             epollFd_ = -1;
         }
 #endif
