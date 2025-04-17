@@ -4,143 +4,131 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <regex>
+#include <sstream>
 #include <string>
-#include <string_view>
 #include <vector>
-#include <cstring>
 
 namespace boson
 {
 
 class Request::Impl
 {
-public:
+  public:
     Impl() {}
 
-    const char* rawRequest = nullptr;
-    size_t rawRequestLength = 0;
+    std::string rawRequest;
     std::string requestMethod;
     std::string requestPath;
     std::string requestQueryString;
     std::map<std::string, std::string> requestQueryParams;
     std::map<std::string, std::string> requestRouteParams;
     std::map<std::string, std::string> requestHeaders;
-    std::string_view requestBodyView;
+    std::string requestBody;
     std::map<std::string, std::any> customProperties;
     std::string clientIP;
     std::string originalRequestPath;
 
-    static const char* findSubstring(const char* str, size_t strLength, const char* substr) {
-        const char* end = str + strLength;
-        size_t substrLen = strlen(substr);
-        
-        if (substrLen > strLength) return nullptr;
-        
-        for (const char* p = str; p <= end - substrLen; ++p) {
-            if (memcmp(p, substr, substrLen) == 0) {
-                return p;
-            }
-        }
-        
-        return nullptr;
+    void parseMethod(const std::string& firstLine)
+    {
+        std::istringstream iss(firstLine);
+        iss >> requestMethod;
     }
 
-    void parseRequest() {
-        if (!rawRequest || rawRequestLength == 0) return;
+    void parsePath(const std::string& firstLine)
+    {
+        std::istringstream iss(firstLine);
+        std::string method;
+        iss >> method;
 
-        const char* lineEnd = findSubstring(rawRequest, rawRequestLength, "\r\n");
-        if (!lineEnd) lineEnd = findSubstring(rawRequest, rawRequestLength, "\n");
-        if (!lineEnd) return;
+        std::string fullPath;
+        iss >> fullPath;
 
-        parseMethodAndPath(std::string_view(rawRequest, lineEnd - rawRequest));
-        
-        const char* headersEnd = findSubstring(rawRequest, rawRequestLength, "\r\n\r\n");
-        if (!headersEnd) headersEnd = findSubstring(rawRequest, rawRequestLength, "\n\n");
-        
-        if (headersEnd) {
-            const char* headerStart = lineEnd + (*(lineEnd + 1) == '\n' ? 1 : 2);
-            parseHeaders(std::string_view(headerStart, headersEnd - headerStart));
-            
-            const char* bodyStart = headersEnd + (*(headersEnd + 2) == '\n' ? 2 : 4);
-            if (bodyStart < rawRequest + rawRequestLength) {
-                requestBodyView = std::string_view(bodyStart, (rawRequest + rawRequestLength) - bodyStart);
-            }
-        }
-    }
-
-    void parseMethodAndPath(std::string_view firstLine) {
-        size_t methodEnd = firstLine.find(' ');
-        if (methodEnd == std::string_view::npos) return;
-        
-        requestMethod = std::string(firstLine.substr(0, methodEnd));
-        
-        size_t pathStart = methodEnd + 1;
-        size_t pathEnd = firstLine.find(' ', pathStart);
-        if (pathEnd == std::string_view::npos) pathEnd = firstLine.length();
-        
-        std::string_view fullPath = firstLine.substr(pathStart, pathEnd - pathStart);
-        
-        size_t queryPos = fullPath.find('?');
-        if (queryPos != std::string_view::npos) {
-            requestPath = std::string(fullPath.substr(0, queryPos));
-            requestQueryString = std::string(fullPath.substr(queryPos + 1));
+        auto queryPos = fullPath.find('?');
+        if (queryPos != std::string::npos)
+        {
+            requestPath = fullPath.substr(0, queryPos);
+            requestQueryString = fullPath.substr(queryPos + 1);
             parseQueryParams();
-        } else {
-            requestPath = std::string(fullPath);
+        }
+        else
+        {
+            requestPath = fullPath;
         }
     }
 
-    void parseHeaders(std::string_view headersSection) {
-        size_t pos = 0;
-        size_t lineEnd;
-        
-        while ((lineEnd = headersSection.find("\r\n", pos)) != std::string_view::npos ||
-               (lineEnd = headersSection.find("\n", pos)) != std::string_view::npos) {
-            
-            std::string_view line = headersSection.substr(pos, lineEnd - pos);
-            
-            size_t colonPos = line.find(':');
-            if (colonPos != std::string_view::npos) {
-                std::string key(line.substr(0, colonPos));
-                
+    void parseQueryParams()
+    {
+        std::istringstream iss(requestQueryString);
+        std::string param;
+
+        while (std::getline(iss, param, '&'))
+        {
+            auto equalsPos = param.find('=');
+            if (equalsPos != std::string::npos)
+            {
+                std::string key = param.substr(0, equalsPos);
+                std::string value = param.substr(equalsPos + 1);
+                requestQueryParams[key] = value;
+            }
+            else
+            {
+                requestQueryParams[param] = "";
+            }
+        }
+    }
+
+    void parseHeaders(const std::vector<std::string>& lines)
+    {
+        for (size_t i = 1; i < lines.size(); i++)
+        {
+            const std::string& line = lines[i];
+
+            if (line.empty())
+            {
+
+                break;
+            }
+
+            auto colonPos = line.find(':');
+            if (colonPos != std::string::npos)
+            {
+                std::string key = line.substr(0, colonPos);
+
                 size_t valueStart = colonPos + 1;
-                while (valueStart < line.size() && std::isspace(line[valueStart])) {
+                while (valueStart < line.size() && std::isspace(line[valueStart]))
+                {
                     valueStart++;
                 }
-                
-                std::string value(line.substr(valueStart));
+
+                std::string value = line.substr(valueStart);
                 requestHeaders[key] = value;
+
+                if (key == "Content-Length")
+                {
+                }
             }
-            
-            pos = lineEnd + ((headersSection[lineEnd] == '\r') ? 2 : 1);
-            if (pos >= headersSection.length()) break;
         }
     }
 
-    void parseQueryParams() {
-        size_t pos = 0;
-        size_t ampPos;
-        
-        while ((ampPos = requestQueryString.find('&', pos)) != std::string::npos) {
-            std::string param = requestQueryString.substr(pos, ampPos - pos);
-            addQueryParam(param);
-            pos = ampPos + 1;
-        }
-        
-        if (pos < requestQueryString.length()) {
-            addQueryParam(requestQueryString.substr(pos));
-        }
-    }
+    void parseBody(const std::vector<std::string>& lines)
+    {
+        bool inBody = false;
+        std::stringstream bodyStream;
 
-    void addQueryParam(const std::string& param) {
-        auto equalsPos = param.find('=');
-        if (equalsPos != std::string::npos) {
-            std::string key = param.substr(0, equalsPos);
-            std::string value = param.substr(equalsPos + 1);
-            requestQueryParams[key] = value;
-        } else {
-            requestQueryParams[param] = "";
+        for (const auto& line : lines)
+        {
+            if (inBody)
+            {
+                bodyStream << line << "\r\n";
+            }
+            else if (line.empty())
+            {
+                inBody = true;
+            }
         }
+
+        requestBody = bodyStream.str();
     }
 };
 
@@ -198,20 +186,21 @@ std::map<std::string, std::string> Request::headers() const
 
 std::string Request::body() const
 {
-    return std::string(pimpl->requestBodyView);
+    return pimpl->requestBody;
 }
 
 nlohmann::json Request::json() const
 {
     try
     {
+
         std::string contentType = header("Content-Type");
         bool isJsonContent = contentType.find("application/json") != std::string::npos ||
                              contentType.find("application/problem+json") != std::string::npos;
 
-        if (isJsonContent || !pimpl->requestBodyView.empty())
+        if (isJsonContent || !pimpl->requestBody.empty())
         {
-            return nlohmann::json::parse(pimpl->requestBodyView);
+            return nlohmann::json::parse(pimpl->requestBody);
         }
     }
     catch (const std::exception& e)
@@ -242,16 +231,9 @@ std::string Request::ip() const
     return pimpl->clientIP;
 }
 
-void Request::setRawRequest(const char* rawRequest)
+void Request::setRawRequest(const std::string& rawRequest)
 {
     pimpl->rawRequest = rawRequest;
-    pimpl->rawRequestLength = strlen(rawRequest);
-}
-
-void Request::setRawRequest(const char* rawRequest, size_t length)
-{
-    pimpl->rawRequest = rawRequest;
-    pimpl->rawRequestLength = length;
 }
 
 void Request::setRouteParam(const std::string& name, const std::string& value)
@@ -261,7 +243,28 @@ void Request::setRouteParam(const std::string& name, const std::string& value)
 
 void Request::parse()
 {
-    pimpl->parseRequest();
+
+    std::vector<std::string> lines;
+    std::istringstream iss(pimpl->rawRequest);
+    std::string line;
+
+    while (std::getline(iss, line))
+    {
+
+        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+        lines.push_back(line);
+    }
+
+    if (lines.empty())
+    {
+        return;
+    }
+
+    pimpl->parseMethod(lines[0]);
+    pimpl->parsePath(lines[0]);
+
+    pimpl->parseHeaders(lines);
+    pimpl->parseBody(lines);
 }
 
 void Request::setOriginalPath(const std::string& path)
