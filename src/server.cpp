@@ -24,9 +24,13 @@
 #pragma comment(lib, "ws2_32.lib")
 using socket_t = SOCKET;
 #define SOCKET_ERROR_VALUE INVALID_SOCKET
-#define close_socket closesocket
 #define EAGAIN WSAEWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
+
+inline int close_socket(socket_t socket) {
+    return closesocket(socket);
+}
+
 #elif defined(__APPLE__) || defined(__MACH__)
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -39,7 +43,11 @@ using socket_t = SOCKET;
 #include <errno.h>
 using socket_t = int;
 #define SOCKET_ERROR_VALUE (-1)
-inline int close_socket(int fd) { return ::close(fd); }
+
+inline int close_socket(int fd) { 
+    return ::close(fd); 
+}
+
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -50,7 +58,11 @@ inline int close_socket(int fd) { return ::close(fd); }
 #include <errno.h>
 using socket_t = int;
 #define SOCKET_ERROR_VALUE (-1)
-#define close_socket close
+
+inline int close_socket(int fd) {
+    return ::close(fd);
+}
+
 #endif
 
 namespace boson
