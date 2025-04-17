@@ -118,10 +118,23 @@ class Request
     std::string ip() const;
 
     /**
-     * @brief Set the raw HTTP request
+     * @brief Set the raw HTTP request as a string (legacy method)
      * @param rawRequest The raw HTTP request
      */
     void setRawRequest(const std::string& rawRequest);
+
+    /**
+     * @brief Set the raw HTTP request as a character array (zero-copy)
+     * @param rawRequest The raw HTTP request
+     */
+    void setRawRequest(const char* rawRequest);
+
+    /**
+     * @brief Set the raw HTTP request with explicit length (zero-copy)
+     * @param rawRequest The raw HTTP request
+     * @param length The length of the request
+     */
+    void setRawRequest(const char* rawRequest, size_t length);
 
     /**
      * @brief Set a route parameter
