@@ -1,27 +1,26 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 project({{.ProjectName}} VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Boson package
-find_package(Boson REQUIRED)
+if(WIN32)
+    set(HOME_DIR "$ENV{USERPROFILE}")
+else()
+    set(HOME_DIR "$ENV{HOME}")
+endif()
 
-# Include directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(BOSON_DIR "${HOME_DIR}/.boson")
 
-# Collect source files
-file(GLOB_RECURSE SOURCES 
-    "src/*.cpp"
-)
-
-# Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Link against Boson
-target_link_libraries(${PROJECT_NAME} PRIVATE Boson::Boson)
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    "${BOSON_DIR}/include"
+)
 
-# Copy public directory to build directory if it exists
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/public")
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/public DESTINATION ${CMAKE_BINARY_DIR})
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC "${BOSON_DIR}/libboson.lib")
+else()
+    target_link_libraries(${PROJECT_NAME} "${BOSON_DIR}/libboson.a")
 endif()
