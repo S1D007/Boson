@@ -197,12 +197,12 @@ public:
         WSACleanup();
 #elif defined(__APPLE__) || defined(__MACH__)
         if (kqueueFd_ >= 0) {
-            close(kqueueFd_);
+            ::close(kqueueFd_);
             kqueueFd_ = -1;
         }
 #else
         if (epollFd_ >= 0) {
-            close(epollFd_);
+            ::close(epollFd_);
             epollFd_ = -1;
         }
 #endif
