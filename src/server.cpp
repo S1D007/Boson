@@ -10,7 +10,7 @@ using socket_t = SOCKET;
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #endif
-inline int close_socket(SOCKET socket) { return closesocket(socket); }
+#define my_close_socket closesocket
 #else
 #ifdef __APPLE__
 #include <sys/event.h>
@@ -27,7 +27,7 @@ inline int close_socket(SOCKET socket) { return closesocket(socket); }
 #include <errno.h>
 using socket_t = int;
 #define SOCKET_ERROR_VALUE (-1)
-inline int close_socket(int fd) { return close(fd); } // Removed scope resolution operator
+#define my_close_socket close
 #endif
 
 #include "boson/server.hpp"
@@ -110,7 +110,7 @@ class Connection
     {
         if (socket_ != SOCKET_ERROR_VALUE)
         {
-            close_socket(socket_);
+            my_close_socket(socket_);
             socket_ = SOCKET_ERROR_VALUE;
         }
     }
@@ -182,13 +182,13 @@ class EventLoop
 #elif defined(__APPLE__) || defined(__MACH__)
         if (kqueueFd_ >= 0)
         {
-            close_socket(kqueueFd_);
+            my_close_socket(kqueueFd_);
             kqueueFd_ = -1;
         }
 #else
         if (epollFd_ >= 0)
         {
-            close_socket(epollFd_);
+            my_close_socket(epollFd_);
             epollFd_ = -1;
         }
 #endif
@@ -492,7 +492,7 @@ class EventLoop
 
         if (listenerSocket_ != SOCKET_ERROR_VALUE)
         {
-            close_socket(listenerSocket_);
+            my_close_socket(listenerSocket_);
             listenerSocket_ = SOCKET_ERROR_VALUE;
         }
 
@@ -549,8 +549,10 @@ class EventLoop
 
         for (const auto& pair : connectionLastActive_)
         {
-            if (now - pair.second > std::chrono::seconds(120))
-            { // 2 min timeout
+            auto connIt = connections_.find(pair.first);
+            if (connIt != connections_.end() && 
+                now - pair.second > std::chrono::seconds(120)) // 2 min timeout
+            {
                 socketsToRemove.push_back(pair.first);
             }
         }
@@ -809,21 +811,21 @@ class Server::Impl
         if (inet_pton(AF_INET, host.c_str(), &(serverAddr.sin_addr)) <= 0)
         {
             std::cerr << "Invalid address" << std::endl;
-            close_socket(serverSocket);
+            my_close_socket(serverSocket);
             return false;
         }
 
         if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
         {
             std::cerr << "Failed to bind socket" << std::endl;
-            close_socket(serverSocket);
+            my_close_socket(serverSocket);
             return false;
         }
 
         if (::listen(serverSocket, SOMAXCONN) < 0)
         {
             std::cerr << "Failed to listen on socket" << std::endl;
-            close_socket(serverSocket);
+            my_close_socket(serverSocket);
             return false;
         }
 
@@ -850,7 +852,7 @@ class Server::Impl
 
         if (serverSocket != SOCKET_ERROR_VALUE)
         {
-            close_socket(serverSocket);
+            my_close_socket(serverSocket);
             serverSocket = SOCKET_ERROR_VALUE;
         }
     }
