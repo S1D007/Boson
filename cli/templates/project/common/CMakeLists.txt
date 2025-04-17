@@ -11,16 +11,31 @@ else()
 endif()
 
 set(BOSON_DIR "${HOME_DIR}/.boson")
+set(BOSON_INCLUDE_DIR "${BOSON_DIR}/include")
+set(BOSON_LIB_PATH_UNIX "${BOSON_DIR}/libboson.a")
+set(BOSON_LIB_PATH_WIN "${BOSON_DIR}/libboson.lib")
+
+file(GLOB_RECURSE SOURCES 
+    "src/*.cpp"
+)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    "${BOSON_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${BOSON_INCLUDE_DIR}"
 )
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC "${BOSON_DIR}/libboson.lib")
+    if(EXISTS "${BOSON_LIB_PATH_WIN}")
+        target_link_libraries(${PROJECT_NAME} PUBLIC "${BOSON_LIB_PATH_WIN}")
+    else()
+        message(WARNING "Boson library not found at ${BOSON_LIB_PATH_WIN}")
+    endif()
 else()
-    target_link_libraries(${PROJECT_NAME} "${BOSON_DIR}/libboson.a")
+    if(EXISTS "${BOSON_LIB_PATH_UNIX}")
+        target_link_libraries(${PROJECT_NAME} PUBLIC "${BOSON_LIB_PATH_UNIX}")
+    else()
+        message(WARNING "Boson library not found at ${BOSON_LIB_PATH_UNIX}")
+    endif()
 endif()
