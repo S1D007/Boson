@@ -1,2 +1,89 @@
-docs
-build
+# Build directories
+build/
+bin/
+lib/
+out/
+cmake-build-*/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+CMakeTmp/
+CMakeScripts/
+Testing/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+Makefile
+*.cmake
+!cmake/BosonConfig.cmake.in
+
+# C++ compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.out
+*.app
+
+# Go compiled files
+*.exe
+*.dll
+*.so
+*.dylib
+cli/debug
+cli/bin/
+cli/pkg/mod/
+vendor/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Documentation builds
+docs/build/
+docs/node_modules/
+docs/generated/
+docs/.docusaurus/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.vs/
+.DS_Store
+*.user
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temp files
+*.log
+logs/
+*.tmp
+tmp/
+temp/
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
