@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boson File Upload Example</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f9fc;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .upload-container {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .file-list {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #file-input {
+            display: none;
+        }
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #upload-button {
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #upload-button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #file-name {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        #upload-progress {
+            margin-top: 10px;
+            display: none;
+        }
+        #message {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #file-list-container {
+            list-style-type: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .file-item {
+            background-color: #e8f4fc;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: transform 0.2s;
+            cursor: pointer;
+            border: 1px solid #d1e6fa;
+            display: flex;
+            flex-direction: column;
+        }
+        .file-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .file-preview {
+            height: 150px;
+            background-color: #f0f7fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .file-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .file-preview .file-icon {
+            font-size: 48px;
+            color: #3498db;
+        }
+        .file-info {
+            padding: 10px;
+        }
+        .file-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+        .file-size {
+            font-size: 12px;
+            color: #666;
+        }
+        .refresh-button {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        #file-modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            overflow: auto;
+            align-items: center;
+            justify-content: center;
+        }
+        #modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+            display: block;
+        }
+        #modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+        #modal-content iframe {
+            width: 100%;
+            height: 90vh;
+            border: none;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 30px;
+            color: #f1f1f1;
+            cursor: pointer;
+        }
+        #modal-caption {
+            text-align: center;
+            color: white;
+            padding: 10px 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Boson File Upload Example</h1>
+    
+    <div class="upload-container">
+        <h2>Upload Files</h2>
+        <form id="upload-form">
+            <label for="file-input" class="file-label">Choose File</label>
+            <button type="submit" id="upload-button" disabled>Upload</button>
+            <div id="file-name">No file selected</div>
+            <div id="upload-progress">Uploading...</div>
+            <div id="message"></div>
+        </form>
+    </div>
+    
+    <div class="file-list">
+        <h2>Uploaded Files</h2>
+        <button id="refresh-files" class="refresh-button">Refresh List</button>
+        <div id="file-list-container">
+            <div class="file-item">Loading file list...</div>
+        </div>
+    </div>
+
+    <!-- Modal for image/file preview -->
+    <div id="file-modal">
+        <span class="close-modal">&times;</span>
+        <div id="modal-content"></div>
+        <div id="modal-caption"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('upload-form');
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.id = 'file-input';
+            fileInput.name = 'file';
+            fileInput.multiple = true;
+            form.appendChild(fileInput);
+            
+            const fileLabel = document.querySelector('.file-label');
+            const uploadButton = document.getElementById('upload-button');
+            const fileName = document.getElementById('file-name');
+            const uploadProgress = document.getElementById('upload-progress');
+            const message = document.getElementById('message');
+            const refreshButton = document.getElementById('refresh-files');
+            const fileListContainer = document.getElementById('file-list-container');
+            const modal = document.getElementById('file-modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalCaption = document.getElementById('modal-caption');
+            const closeModal = document.querySelector('.close-modal');
+            
+            // Close modal when clicking on X
+            closeModal.addEventListener('click', function() {
+                modal.style.display = 'none';
+                modalContent.innerHTML = '';
+            });
+            
+            // Close modal when clicking outside of the image
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                    modalContent.innerHTML = '';
+                }
+            });
+            
+            // Load initial file list
+            loadFileList();
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    fileName.textContent = this.files.length === 1 ? 
+                        `Selected: ${this.files[0].name}` : 
+                        `Selected ${this.files.length} files`;
+                    uploadButton.disabled = false;
+                } else {
+                    fileName.textContent = 'No file selected';
+                    uploadButton.disabled = true;
+                }
+            });
+            
+            // Handle file drop
+            fileLabel.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (fileInput.files.length === 0) {
+                    showMessage('Please select a file first', false);
+                    return;
+                }
+                
+                uploadProgress.style.display = 'block';
+                uploadButton.disabled = true;
+                
+                const formData = new FormData();
+                for (const file of fileInput.files) {
+                    formData.append('file', file);
+                }
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showMessage(`Error: ${data.error}`, false);
+                    } else {
+                        showMessage(`${data.count} file(s) uploaded successfully!`, true);
+                        loadFileList();
+                        // Reset form
+                        form.reset();
+                        fileName.textContent = 'No file selected';
+                    }
+                })
+                .catch(error => {
+                    showMessage(`Upload failed: ${error.message}`, false);
+                })
+                .finally(() => {
+                    uploadProgress.style.display = 'none';
+                    uploadButton.disabled = false;
+                });
+            });
+            
+            // Refresh file list
+            refreshButton.addEventListener('click', loadFileList);
+            
+            function loadFileList() {
+                fileListContainer.innerHTML = '<div class="file-item">Loading file list...</div>';
+                
+                fetch('/files')
+                    .then(response => response.json())
+                    .then(data => {
+                        fileListContainer.innerHTML = '';
+                        
+                        if (data.count === 0) {
+                            fileListContainer.innerHTML = '<div class="file-item">No files uploaded yet</div>';
+                            return;
+                        }
+                        
+                        data.files.forEach(file => {
+                            // Create file item container
+                            const fileItem = document.createElement('div');
+                            fileItem.className = 'file-item';
+                            fileItem.dataset.url = file.url;
+                            fileItem.dataset.name = file.name;
+                            fileItem.dataset.isImage = file.isImage;
+                            
+                            // Create preview section
+                            const preview = document.createElement('div');
+                            preview.className = 'file-preview';
+                            
+                            if (file.isImage) {
+                                const img = document.createElement('img');
+                                img.src = file.url;
+                                img.alt = file.name;
+                                preview.appendChild(img);
+                            } else {
+                                // File type icon based on extension
+                                const fileIcon = document.createElement('div');
+                                fileIcon.className = 'file-icon';
+                                
+                                const extension = file.name.split('.').pop().toLowerCase();
+                                let icon = '📄'; // Default file icon
+                                
+                                // Assign icons based on file type
+                                if (['pdf'].includes(extension)) icon = '📕';
+                                else if (['doc', 'docx', 'txt', 'rtf'].includes(extension)) icon = '📝';
+                                else if (['xls', 'xlsx', 'csv'].includes(extension)) icon = '📊';
+                                else if (['ppt', 'pptx'].includes(extension)) icon = '📊';
+                                else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) icon = '📦';
+                                else if (['mp3', 'wav', 'ogg'].includes(extension)) icon = '🎵';
+                                else if (['mp4', 'avi', 'mov', 'wmv'].includes(extension)) icon = '🎬';
+                                
+                                fileIcon.textContent = icon;
+                                preview.appendChild(fileIcon);
+                            }
+                            
+                            // Create info section
+                            const info = document.createElement('div');
+                            info.className = 'file-info';
+                            
+                            const nameDiv = document.createElement('div');
+                            nameDiv.className = 'file-name';
+                            nameDiv.textContent = file.name;
+                            
+                            const sizeDiv = document.createElement('div');
+                            sizeDiv.className = 'file-size';
+                            sizeDiv.textContent = formatFileSize(file.size);
+                            
+                            info.appendChild(nameDiv);
+                            info.appendChild(sizeDiv);
+                            
+                            // Add components to file item
+                            fileItem.appendChild(preview);
+                            fileItem.appendChild(info);
+                            
+                            // Add click event
+                            fileItem.addEventListener('click', function() {
+                                openFilePreview(this.dataset.url, this.dataset.name, this.dataset.isImage === 'true');
+                            });
+                            
+                            fileListContainer.appendChild(fileItem);
+                        });
+                    })
+                    .catch(error => {
+                        fileListContainer.innerHTML = `<div class="file-item error">Failed to load file list: ${error.message}</div>`;
+                    });
+            }
+            
+            function openFilePreview(url, filename, isImage) {
+                modalContent.innerHTML = '';
+                modalCaption.textContent = filename;
+                
+                if (isImage) {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = filename;
+                    modalContent.appendChild(img);
+                } else {
+                    // For non-image files, show them in an iframe or offer download
+                    const extension = filename.split('.').pop().toLowerCase();
+                    
+                    // Files that can be displayed in iframe
+                    const viewableTypes = ['pdf', 'txt'];
+                    
+                    if (viewableTypes.includes(extension)) {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = url;
+                        modalContent.appendChild(iframe);
+                    } else {
+                        // For other files, show download link
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = url;
+                        downloadLink.target = '_blank';
+                        downloadLink.textContent = `Download ${filename}`;
+                        downloadLink.style.color = 'white';
+                        downloadLink.style.fontSize = '20px';
+                        downloadLink.style.textDecoration = 'underline';
+                        
+                        modalContent.appendChild(downloadLink);
+                    }
+                }
+                
+                modal.style.display = 'flex';
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            function showMessage(text, isSuccess) {
+                message.textContent = text;
+                message.style.display = 'block';
+                message.className = isSuccess ? 'success' : 'error';
+                
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

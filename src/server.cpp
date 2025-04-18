@@ -223,21 +223,65 @@ class Server::Impl
 
     void handleClient(socket_t clientSocket)
     {
-
-        constexpr int bufferSize = 8192;
-        char buffer[bufferSize];
-        int bytesRead = recv(clientSocket, buffer, bufferSize - 1, 0);
-
-        if (bytesRead <= 0)
-        {
+        constexpr int headerBufferSize = 8192;
+        char headerBuffer[headerBufferSize];
+        std::string requestData;
+        
+        int bytesRead = recv(clientSocket, headerBuffer, headerBufferSize - 1, 0);
+        if (bytesRead <= 0) {
             return;
         }
-
-        buffer[bytesRead] = '\0';
+        
+        headerBuffer[bytesRead] = '\0';
+        requestData.append(headerBuffer, bytesRead);
+        
+        size_t headerEnd = requestData.find("\r\n\r\n");
+        if (headerEnd == std::string::npos) {
+            return;
+        }
+        
+        size_t contentLengthPos = requestData.find("Content-Length:");
+        size_t bodyLength = 0;
+        
+        if (contentLengthPos != std::string::npos) {
+            size_t valueStart = requestData.find_first_not_of(" \t", contentLengthPos + 15);
+            size_t valueEnd = requestData.find_first_of("\r\n", valueStart);
+            if (valueStart != std::string::npos && valueEnd != std::string::npos) {
+                try {
+                    bodyLength = std::stoul(requestData.substr(valueStart, valueEnd - valueStart));
+                } catch (...) { }
+            }
+        }
+        
+        size_t bodyRead = requestData.size() - (headerEnd + 4);
+        
+        if (bodyLength > bodyRead) {
+            size_t remainingBytes = bodyLength - bodyRead;
+            
+            char* bodyBuffer = new char[8192];
+            while (remainingBytes > 0) {
+                size_t chunkSize = std::min(remainingBytes, (size_t)8192);
+                bytesRead = recv(clientSocket, bodyBuffer, chunkSize, 0);
+                
+                if (bytesRead <= 0) {
+                    break;
+                }
+                
+                requestData.append(bodyBuffer, bytesRead);
+                remainingBytes -= bytesRead;
+            }
+            delete[] bodyBuffer;
+        }
 
         Request request;
-        request.setRawRequest(buffer);
+        request.setRawRequest(requestData);
         request.parse();
+        
+        std::string contentType = request.header("Content-Type");
+        if (contentType.find("multipart/form-data") != std::string::npos && bodyLength > 0) {
+            std::string body = requestData.substr(headerEnd + 4);
+            request.setBody(body);
+        }
 
         Response response;
 
