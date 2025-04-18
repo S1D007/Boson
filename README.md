@@ -1,3 +1,7 @@
+# 🚧 Under Development
+
+**This project is under development and not ready for use.**
+
 # ⚡ Boson Framework – High-Performance C++ Web Framework
 
 [![Release](https://img.shields.io/github/actions/workflow/status/S1D007/boson/release.yml)](https://github.com/S1D007/boson/actions)
