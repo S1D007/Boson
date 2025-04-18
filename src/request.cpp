@@ -1,6 +1,5 @@
 #include "boson/request.hpp"
 #include "../include/external/json.hpp"
-
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -28,6 +27,7 @@ class Request::Impl
     std::map<std::string, std::any> customProperties;
     std::string clientIP;
     std::string originalRequestPath;
+    std::vector<UploadedFile> uploadedFiles;
 
     void parseMethod(const std::string& firstLine)
     {
@@ -113,22 +113,146 @@ class Request::Impl
 
     void parseBody(const std::vector<std::string>& lines)
     {
-        bool inBody = false;
-        std::stringstream bodyStream;
-
-        for (const auto& line : lines)
-        {
-            if (inBody)
-            {
-                bodyStream << line << "\r\n";
-            }
-            else if (line.empty())
-            {
-                inBody = true;
+        size_t headerEnd = 0;
+        for (size_t i = 0; i < lines.size(); ++i) {
+            if (lines[i].empty()) {
+                headerEnd = i;
+                break;
             }
         }
 
-        requestBody = bodyStream.str();
+        if (headerEnd == 0 || headerEnd >= lines.size() - 1) {
+            requestBody = "";
+            return;
+        }
+
+        size_t expectedLength = 0;
+        auto it = requestHeaders.find("Content-Length");
+        if (it != requestHeaders.end()) {
+            try {
+                expectedLength = std::stoul(it->second);
+            } catch(...) {
+            }
+        }
+
+        if (!rawRequest.empty()) {
+            size_t bodyStart = rawRequest.find("\r\n\r\n");
+            if (bodyStart != std::string::npos) {
+                bodyStart += 4;
+                requestBody = rawRequest.substr(bodyStart);
+            }
+        } else {
+            std::stringstream bodyStream;
+            for (size_t i = headerEnd + 1; i < lines.size(); ++i) {
+                bodyStream << lines[i] << "\r\n";
+            }
+            requestBody = bodyStream.str();
+        }
+        
+        auto contentTypeIt = requestHeaders.find("Content-Type");
+        if (contentTypeIt != requestHeaders.end() && contentTypeIt->second.find("multipart/form-data") != std::string::npos) {
+            std::string contentType = contentTypeIt->second;
+            std::string boundary;
+            
+            std::string::size_type pos = contentType.find("boundary=");
+            if (pos != std::string::npos) {
+                pos += 9;
+                
+                if (pos < contentType.length() && contentType[pos] == '"') {
+                    pos++;
+                    size_t endQuote = contentType.find('"', pos);
+                    if (endQuote != std::string::npos) {
+                        boundary = "--" + contentType.substr(pos, endQuote - pos);
+                    }
+                } else {
+                    size_t endPos = contentType.find(';', pos);
+                    if (endPos == std::string::npos) {
+                        endPos = contentType.length();
+                    }
+                    boundary = "--" + contentType.substr(pos, endPos - pos);
+                }
+                
+                boundary.erase(std::remove_if(boundary.begin(), boundary.end(), 
+                    [](unsigned char c) { return std::isspace(c) || c == '"'; }), boundary.end());
+            }
+            
+            if (boundary.empty()) {
+                return;
+            }
+            
+            std::string body = requestBody;
+            std::string endBoundary = boundary + "--";
+            
+            size_t start = 0;
+            while (true) {
+                size_t partStart = body.find(boundary, start);
+                if (partStart == std::string::npos) break;
+                
+                partStart += boundary.size();
+                
+                if (partStart + 2 <= body.size() && body.compare(partStart, 2, "--") == 0) break;
+                
+                if (partStart + 2 <= body.size() && body.compare(partStart, 2, "\r\n") == 0) partStart += 2;
+                
+                size_t partEnd = body.find(boundary, partStart);
+                if (partEnd == std::string::npos) break;
+                
+                std::string part = body.substr(partStart, partEnd - partStart - 2);
+                
+                size_t headerEnd = part.find("\r\n\r\n");
+                if (headerEnd == std::string::npos) { 
+                    start = partEnd;
+                    continue; 
+                }
+                
+                std::string headerBlock = part.substr(0, headerEnd);
+                std::string dataBlock = part.substr(headerEnd + 4);
+                
+                std::map<std::string, std::string> partHeaders;
+                std::istringstream headerStream(headerBlock);
+                std::string headerLine;
+                while (std::getline(headerStream, headerLine)) {
+                    if (!headerLine.empty() && headerLine.back() == '\r') headerLine.pop_back();
+                    if (headerLine.empty()) continue;
+                    
+                    size_t colon = headerLine.find(":");
+                    if (colon != std::string::npos) {
+                        std::string key = headerLine.substr(0, colon);
+                        std::string value = headerLine.substr(colon + 1);
+                        while (!value.empty() && std::isspace(value.front())) value.erase(0, 1);
+                        partHeaders[key] = value;
+                    }
+                }
+                
+                auto cdIt = partHeaders.find("Content-Disposition");
+                if (cdIt != partHeaders.end()) {
+                    std::string cd = cdIt->second;
+                    
+                    std::regex nameRe("name=\"([^\"]+)\"");
+                    std::regex fnRe("filename=\"([^\"]*)\"");
+                    std::smatch nameMatch, fnMatch;
+                    std::string fieldName, fileName;
+                    
+                    if (std::regex_search(cd, nameMatch, nameRe)) fieldName = nameMatch[1];
+                    if (std::regex_search(cd, fnMatch, fnRe)) fileName = fnMatch[1];
+                    
+                    if (!fileName.empty()) {
+                        UploadedFile file;
+                        file.fieldName = fieldName;
+                        file.fileName = fileName;
+                        file.contentType = partHeaders.count("Content-Type") ? partHeaders["Content-Type"] : "application/octet-stream";
+                        file.size = dataBlock.size();
+                        file.data.assign(dataBlock.begin(), dataBlock.end());
+                        
+                        uploadedFiles.push_back(std::move(file));
+                    } else {
+                        requestQueryParams[fieldName] = dataBlock;
+                    }
+                }
+                
+                start = partEnd;
+            }
+        }
     }
 };
 
@@ -275,6 +399,135 @@ void Request::setOriginalPath(const std::string& path)
 void Request::overridePath(const std::string& path)
 {
     pimpl->requestPath = path;
+}
+
+std::vector<UploadedFile> Request::files() const {
+    return pimpl->uploadedFiles;
+}
+
+void Request::setBody(const std::string& body)
+{
+    pimpl->requestBody = body;
+    
+    auto contentTypeIt = pimpl->requestHeaders.find("Content-Type");
+    if (contentTypeIt != pimpl->requestHeaders.end() && 
+        contentTypeIt->second.find("multipart/form-data") != std::string::npos) {
+        
+        std::string contentType = contentTypeIt->second;
+        std::string boundary;
+        
+        std::string::size_type pos = contentType.find("boundary=");
+        if (pos != std::string::npos) {
+            pos += 9;
+            
+            if (pos < contentType.length() && contentType[pos] == '"') {
+                pos++;
+                size_t endQuote = contentType.find('"', pos);
+                if (endQuote != std::string::npos) {
+                    boundary = "--" + contentType.substr(pos, endQuote - pos);
+                }
+            } else {
+                size_t endPos = contentType.find(';', pos);
+                if (endPos == std::string::npos) {
+                    endPos = contentType.length();
+                }
+                boundary = "--" + contentType.substr(pos, endPos - pos);
+            }
+            
+            boundary.erase(std::remove_if(boundary.begin(), boundary.end(), 
+                [](unsigned char c) { return std::isspace(c); }), boundary.end());
+        }
+        
+        if (!boundary.empty() && !body.empty()) {
+            size_t start = body.find(boundary);
+            if (start != std::string::npos) {
+                pimpl->uploadedFiles.clear();
+                
+                while (true) {
+                    start = body.find(boundary, start);
+                    if (start == std::string::npos) break;
+                    
+                    start += boundary.length();
+                    
+                    if (start + 2 <= body.size() && body.compare(start, 2, "--") == 0) {
+                        break;
+                    }
+                    
+                    if (start + 2 <= body.size() && body.compare(start, 2, "\r\n") == 0) {
+                        start += 2;
+                    }
+                    
+                    size_t nextBoundary = body.find(boundary, start);
+                    if (nextBoundary == std::string::npos) break;
+                    
+                    size_t partEndWithoutCRLF = nextBoundary - 2;
+                    if (partEndWithoutCRLF <= start) continue;
+                    
+                    std::string partContent = body.substr(start, partEndWithoutCRLF - start);
+                    
+                    size_t headerEnd = partContent.find("\r\n\r\n");
+                    if (headerEnd == std::string::npos) {
+                        start = nextBoundary;
+                        continue;
+                    }
+                    
+                    std::string headersPart = partContent.substr(0, headerEnd);
+                    std::string bodyPart = partContent.substr(headerEnd + 4);
+                    
+                    std::map<std::string, std::string> headers;
+                    std::istringstream headerStream(headersPart);
+                    std::string line;
+                    
+                    while (std::getline(headerStream, line)) {
+                        if (!line.empty() && line.back() == '\r') line.pop_back();
+                        if (line.empty()) continue;
+                        
+                        size_t colonPos = line.find(':');
+                        if (colonPos != std::string::npos) {
+                            std::string name = line.substr(0, colonPos);
+                            std::string value = line.substr(colonPos + 1);
+                            value.erase(0, value.find_first_not_of(" \t"));
+                            headers[name] = value;
+                        }
+                    }
+                    
+                    auto cdIt = headers.find("Content-Disposition");
+                    if (cdIt != headers.end()) {
+                        std::string cd = cdIt->second;
+                        
+                        std::string fieldName, fileName;
+                        
+                        std::regex nameRegex("name=\"([^\"]*)\"");
+                        std::smatch nameMatch;
+                        if (std::regex_search(cd, nameMatch, nameRegex) && nameMatch.size() > 1) {
+                            fieldName = nameMatch[1];
+                        }
+                        
+                        std::regex fileRegex("filename=\"([^\"]*)\"");
+                        std::smatch fileMatch;
+                        if (std::regex_search(cd, fileMatch, fileRegex) && fileMatch.size() > 1) {
+                            fileName = fileMatch[1];
+                        }
+                        
+                        if (!fileName.empty()) {
+                            UploadedFile file;
+                            file.fieldName = fieldName;
+                            file.fileName = fileName;
+                            file.contentType = headers.count("Content-Type") ? headers["Content-Type"] : "application/octet-stream";
+                            file.size = bodyPart.size();
+                            file.data.assign(bodyPart.begin(), bodyPart.end());
+                            
+                            pimpl->uploadedFiles.push_back(std::move(file));
+                        } else if (!fieldName.empty()) {
+                            pimpl->requestQueryParams[fieldName] = bodyPart;
+                        }
+                    }
+                    
+                    start = nextBoundary;
+                }
+            }
+        }
+    }
 }
 
 } // namespace boson

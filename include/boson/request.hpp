@@ -7,9 +7,25 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <fstream>
 
 namespace boson
 {
+
+struct UploadedFile {
+    std::string fieldName;
+    std::string fileName;
+    std::string contentType;
+    size_t size;
+    std::vector<unsigned char> data;
+
+    bool saveTo(const std::string& path) const {
+        std::ofstream out(path, std::ios::binary);
+        if (!out) return false;
+        out.write(reinterpret_cast<const char*>(data.data()), data.size());
+        return out.good();
+    }
+};
 
 /**
  * @class Request
@@ -85,6 +101,12 @@ class Request
     std::string body() const;
 
     /**
+     * @brief Set the request body directly
+     * @param body The raw request body
+     */
+    void setBody(const std::string& body);
+
+    /**
      * @brief Get the request body as JSON
      * @return The request body as a JSON object
      */
@@ -146,6 +168,12 @@ class Request
      * @brief Parse the raw HTTP request
      */
     void parse();
+
+    /**
+     * @brief Get uploaded files (multipart/form-data)
+     * @return Vector of UploadedFile
+     */
+    std::vector<UploadedFile> files() const;
 
   private:
     class Impl;
