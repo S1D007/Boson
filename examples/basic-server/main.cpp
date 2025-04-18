@@ -4,6 +4,10 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <csignal>
+
+// Global pointer for signal handler
+static boson::Server* gApp = nullptr;
 
 class UserController : public boson::Controller
 {
@@ -110,8 +114,14 @@ class UserController : public boson::Controller
 int main()
 {
     boson::initialize();
+    
+    // Register signal handler for graceful shutdown
+    gApp = nullptr; // will set after creating server
+    std::signal(SIGINT, [](int){ if (gApp) gApp->stop(); });
 
     boson::Server app;
+    gApp = &app;
+
     app.use(
         [](const boson::Request& req, boson::Response& res, boson::NextFunction& next)
         {

@@ -95,40 +95,33 @@ Examples:
 		}
 
 		headerColor.Println("▶️  STARTING APPLICATION")
-		fmt.Printf("  %s Launching executable...", color.YellowString("⟳"))
+		if watchMode {
+			fmt.Println()
+			headerColor.Println("👀 WATCH MODE ENABLED")
+			fmt.Println("  File changes will automatically rebuild and restart the application")
+			watchAndReload(currentDir, executable, port, host, headerColor)
+			return
+		}
 
+		fmt.Printf("  %s Launching executable...", color.YellowString("⟳"))
 		execCmd := exec.Command(executable, fmt.Sprintf("--port=%d", port), fmt.Sprintf("--host=%s", host))
 		execCmd.Stdout = os.Stdout
 		execCmd.Stderr = os.Stderr
-
 		if err := execCmd.Start(); err != nil {
 			fmt.Printf("\r  %s Failed to start application\n", color.RedString("✗"))
 			fmt.Println()
 			color.Red("Error: %v", err)
 			return
 		}
-
 		fmt.Printf("\r  %s Application started successfully\n", color.GreenString("✓"))
 		fmt.Println()
-
 		success := color.New(color.FgGreen, color.Bold).SprintFunc()
 		urlColor := color.New(color.Bold).SprintFunc()
 		fmt.Println(success("💻 APPLICATION IS RUNNING"))
 		fmt.Printf("  🔗 URL: %s\n", urlColor(fmt.Sprintf("http://%s:%d", host, port)))
-
-		if watchMode {
-			fmt.Println()
-			headerColor.Println("👀 WATCH MODE ENABLED")
-			fmt.Println("  File changes will automatically rebuild and restart the application")
-
-			watchAndReload(currentDir, executable, port, host, headerColor)
-			return
-		}
-
 		fmt.Println()
 		fmt.Println("  Press Ctrl+C to stop the application")
 		fmt.Println()
-
 		if err := execCmd.Wait(); err != nil {
 			if err.Error() != "signal: interrupt" {
 				fmt.Printf("\n  %s Application terminated unexpectedly\n", color.RedString("✗"))
