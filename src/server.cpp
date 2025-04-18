@@ -17,6 +17,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -261,7 +262,7 @@ class Server::Impl
             char* bodyBuffer = new char[8192];
             while (remainingBytes > 0) {
                 size_t chunkSize = std::min(remainingBytes, (size_t)8192);
-                bytesRead = recv(clientSocket, bodyBuffer, chunkSize, 0);
+                bytesRead = recv(clientSocket, bodyBuffer, static_cast<int>(chunkSize), 0);
                 
                 if (bytesRead <= 0) {
                     break;
