@@ -64,6 +64,10 @@ func fetchLatestRelease() (*ReleaseInfo, error) {
 	return &release, nil
 }
 
+func FetchLatestReleaseInfo() (*ReleaseInfo, error) {
+	return fetchLatestRelease()
+}
+
 func downloadAsset(url, dest string) error {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -77,6 +81,10 @@ func downloadAsset(url, dest string) error {
 	defer f.Close()
 	_, err = io.Copy(f, resp.Body)
 	return err
+}
+
+func DownloadAsset(url, dest string) error {
+	return downloadAsset(url, dest)
 }
 
 func extractTarGz(src, dest string) error {
