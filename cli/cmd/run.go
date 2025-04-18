@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/S1D007/boson/pkg/utils"
@@ -152,7 +154,7 @@ func init() {
 // Add file watcher and hot reload logic
 func watchAndReload(projectDir, executable string, port int, host string, headerColor *color.Color) {
 	watchDirs := []string{"src", "include"}
-	var lastRun *os.Process
+	var lastCmd *exec.Cmd
 	var watcher *utils.FileWatcher
 	var err error
 
@@ -163,16 +165,51 @@ func watchAndReload(projectDir, executable string, port int, host string, header
 	}
 	defer watcher.Close()
 
-	restart := func() {
-		if lastRun != nil {
-			lastRun.Kill()
-			lastRun.Wait()
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	gracefulStop := func() {
+		if lastCmd != nil && lastCmd.Process != nil {
+			headerColor.Println("🛑 Stopping application...")
+
+			if err := lastCmd.Process.Signal(syscall.SIGTERM); err != nil {
+				headerColor.Printf("Could not send SIGTERM: %v\n", err)
+				if err := lastCmd.Process.Kill(); err != nil {
+					headerColor.Printf("Could not kill process: %v\n", err)
+				}
+			}
+
+			done := make(chan error, 1)
+			go func() {
+				done <- lastCmd.Wait()
+			}()
+
+			select {
+			case <-done:
+			case <-time.After(2 * time.Second):
+				headerColor.Println("Process didn't terminate in time, forcing kill...")
+				if err := lastCmd.Process.Kill(); err != nil {
+					headerColor.Printf("Could not force kill: %v\n", err)
+				}
+			}
+
+			time.Sleep(500 * time.Millisecond)
 		}
+	}
+
+	restart := func() {
+		// Stop any running instance
+		gracefulStop()
+
 		headerColor.Println("🔨 Rebuilding application due to file change...")
 		if err := utils.BuildProject(projectDir); err != nil {
 			headerColor.Println("Build failed:", err)
 			return
 		}
+
+		time.Sleep(500 * time.Millisecond)
+
+		// Start the new instance
 		cmd := exec.Command(executable, fmt.Sprintf("--port=%d", port), fmt.Sprintf("--host=%s", host))
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -180,10 +217,18 @@ func watchAndReload(projectDir, executable string, port int, host string, header
 			headerColor.Println("Failed to start application:", err)
 			return
 		}
-		lastRun = cmd.Process
+		lastCmd = cmd
 	}
 
-	restart() // Initial run
+	restart()
+
+	go func() {
+		<-sigChan
+		headerColor.Println("\n🛑 Terminating watch mode...")
+		gracefulStop()
+		os.Exit(0)
+	}()
+
 	for {
 		changed := watcher.WaitForChange()
 		if changed {
