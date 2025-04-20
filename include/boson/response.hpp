@@ -2,6 +2,7 @@
 #define BOSON_RESPONSE_HPP
 
 #include "../external/json.hpp"
+#include "cookie.hpp"
 #include <any>
 #include <initializer_list>
 #include <map>
@@ -93,6 +94,47 @@ class Response
      * @return Reference to this response for method chaining
      */
     Response& redirect(const std::string& url, int code = 302);
+    
+    /**
+     * @brief Set a cookie
+     * @param name The name of the cookie
+     * @param value The value of the cookie
+     * @return Reference to this response for method chaining
+     */
+    Response& cookie(const std::string& name, const std::string& value);
+    
+    /**
+     * @brief Set a cookie with options
+     * @param name The name of the cookie
+     * @param value The value of the cookie
+     * @param options Cookie settings (domain, path, maxAge, secure, httpOnly)
+     * @return Reference to this response for method chaining
+     */
+    Response& cookie(const std::string& name, const std::string& value, 
+                     const std::map<std::string, std::any>& options);
+    
+    /**
+     * @brief Set a cookie using a Cookie object
+     * @param cookie The cookie object to set
+     * @return Reference to this response for method chaining
+     */
+    Response& cookie(const Cookie& cookie);
+    
+    /**
+     * @brief Clear a cookie
+     * @param name The name of the cookie to clear
+     * @return Reference to this response for method chaining
+     */
+    Response& clearCookie(const std::string& name);
+    
+    /**
+     * @brief Clear a cookie with options
+     * @param name The name of the cookie to clear
+     * @param options Cookie settings (domain, path)
+     * @return Reference to this response for method chaining
+     */
+    Response& clearCookie(const std::string& name, 
+                          const std::map<std::string, std::string>& options);
 
     /**
      * @brief Check if the response has been sent

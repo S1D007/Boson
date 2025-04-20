@@ -138,6 +138,43 @@ class Request
      * @return The client IP address
      */
     std::string ip() const;
+    
+    /**
+     * @brief Get the hostname derived from the Host header
+     * @return The hostname
+     */
+    std::string hostname() const;
+    
+    /**
+     * @brief Get the original URL as received by the server
+     * @return The original URL
+     */
+    std::string originalUrl() const;
+    
+    /**
+     * @brief Get the protocol used for the request (http or https)
+     * @return The protocol string
+     */
+    std::string protocol() const;
+    
+    /**
+     * @brief Check if the request was made over a secure connection
+     * @return True if secure, false otherwise
+     */
+    bool secure() const;
+    
+    /**
+     * @brief Get a cookie value by name
+     * @param name The name of the cookie
+     * @return The cookie value or empty string if not found
+     */
+    std::string cookie(const std::string& name) const;
+    
+    /**
+     * @brief Get all cookies
+     * @return A map of cookie names to values
+     */
+    std::map<std::string, std::string> cookies() const;
 
     /**
      * @brief Set the raw HTTP request

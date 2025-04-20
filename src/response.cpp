@@ -1,5 +1,6 @@
 #include "boson/response.hpp"
 #include "../include/external/json.hpp"
+#include "boson/cookie.hpp"
 
 #include <map>
 #include <memory>
@@ -7,6 +8,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <chrono>
 
 namespace boson
 {
@@ -20,6 +22,7 @@ class Response::Impl
     std::string responseBody;
     int statusCode;
     bool sentFlag;
+    std::vector<Cookie> cookies;
 
     std::string getStatusText(int code)
     {
@@ -62,13 +65,19 @@ class Response::Impl
         responseHeaders["Content-Length"] = std::to_string(responseBody.length());
         responseHeaders["Connection"] = "close";
 
+        // Add all headers
         for (const auto& header : responseHeaders)
         {
             ss << header.first << ": " << header.second << "\r\n";
         }
 
-        ss << "\r\n";
+        // Add all cookies
+        for (const auto& cookie : cookies)
+        {
+            ss << "Set-Cookie: " << cookie.toString() << "\r\n";
+        }
 
+        ss << "\r\n";
         ss << responseBody;
 
         return ss.str();
@@ -112,7 +121,6 @@ Response& Response::json(const std::any& jsonData)
             }
             else
             {
-
                 j = nlohmann::json::object();
             }
 
@@ -120,7 +128,6 @@ Response& Response::json(const std::any& jsonData)
         }
         catch (const std::exception& e)
         {
-
             pimpl->responseBody = "{}";
         }
 
@@ -207,6 +214,95 @@ Response& Response::redirect(const std::string& url, int code)
     pimpl->statusCode = code;
     header("Location", url);
     return send("");
+}
+
+Response& Response::cookie(const std::string& name, const std::string& value)
+{
+    Cookie cookie(name, value);
+    pimpl->cookies.push_back(cookie);
+    return *this;
+}
+
+Response& Response::cookie(const std::string& name, const std::string& value,
+                          const std::map<std::string, std::any>& options)
+{
+    Cookie cookie(name, value);
+
+    // Apply cookie options
+    for (const auto& option : options)
+    {
+        if (option.first == "domain" && option.second.type() == typeid(std::string))
+        {
+            cookie.domain(std::any_cast<std::string>(option.second));
+        }
+        else if (option.first == "path" && option.second.type() == typeid(std::string))
+        {
+            cookie.path(std::any_cast<std::string>(option.second));
+        }
+        else if (option.first == "maxAge" && option.second.type() == typeid(int))
+        {
+            cookie.maxAge(std::any_cast<int>(option.second));
+        }
+        else if (option.first == "secure" && option.second.type() == typeid(bool))
+        {
+            cookie.secure(std::any_cast<bool>(option.second));
+        }
+        else if (option.first == "httpOnly" && option.second.type() == typeid(bool))
+        {
+            cookie.httpOnly(std::any_cast<bool>(option.second));
+        }
+        else if (option.first == "sameSite" && option.second.type() == typeid(std::string))
+        {
+            cookie.sameSite(std::any_cast<std::string>(option.second));
+        }
+        else if (option.first == "expires")
+        {
+            if (option.second.type() == typeid(std::chrono::system_clock::time_point))
+            {
+                cookie.expires(std::any_cast<std::chrono::system_clock::time_point>(option.second));
+            }
+        }
+    }
+
+    pimpl->cookies.push_back(cookie);
+    return *this;
+}
+
+Response& Response::cookie(const Cookie& cookie)
+{
+    pimpl->cookies.push_back(cookie);
+    return *this;
+}
+
+Response& Response::clearCookie(const std::string& name)
+{
+    Cookie cookie(name, "");
+    cookie.maxAge(0);
+    pimpl->cookies.push_back(cookie);
+    return *this;
+}
+
+Response& Response::clearCookie(const std::string& name,
+                              const std::map<std::string, std::string>& options)
+{
+    Cookie cookie(name, "");
+    cookie.maxAge(0);
+
+    // Apply path/domain options for proper cookie clearing
+    for (const auto& option : options)
+    {
+        if (option.first == "domain")
+        {
+            cookie.domain(option.second);
+        }
+        else if (option.first == "path")
+        {
+            cookie.path(option.second);
+        }
+    }
+
+    pimpl->cookies.push_back(cookie);
+    return *this;
 }
 
 bool Response::sent() const

@@ -14,19 +14,23 @@ namespace boson
 class Request::Impl
 {
   public:
-    Impl() {}
+    Impl() : isSecure(false) {}
 
     std::string rawRequest;
     std::string requestMethod;
     std::string requestPath;
     std::string requestQueryString;
+    std::string fullUrl;
     std::map<std::string, std::string> requestQueryParams;
     std::map<std::string, std::string> requestRouteParams;
     std::map<std::string, std::string> requestHeaders;
+    std::map<std::string, std::string> requestCookies;
     std::string requestBody;
     std::map<std::string, std::any> customProperties;
     std::string clientIP;
     std::string originalRequestPath;
+    std::string requestProtocol;
+    bool isSecure;
     std::vector<UploadedFile> uploadedFiles;
 
     void parseMethod(const std::string& firstLine)
@@ -43,6 +47,8 @@ class Request::Impl
 
         std::string fullPath;
         iss >> fullPath;
+
+        fullUrl = fullPath;
 
         auto queryPos = fullPath.find('?');
         if (queryPos != std::string::npos)
@@ -86,7 +92,6 @@ class Request::Impl
 
             if (line.empty())
             {
-
                 break;
             }
 
@@ -104,10 +109,51 @@ class Request::Impl
                 std::string value = line.substr(valueStart);
                 requestHeaders[key] = value;
 
-                if (key == "Content-Length")
-                {
+                if (key == "X-Forwarded-Proto" && value == "https") {
+                    requestProtocol = "https";
+                    isSecure = true;
+                }
+                
+                if (key == "Cookie") {
+                    parseCookies(value);
                 }
             }
+        }
+        
+        if (requestProtocol.empty()) {
+            requestProtocol = "http";
+        }
+    }
+
+    void parseCookies(const std::string& cookieHeader) {
+        std::istringstream iss(cookieHeader);
+        std::string cookiePair;
+        
+        std::string cookieStr = cookieHeader;
+        size_t pos = 0;
+        std::string delimiter = ";";
+        
+        while ((pos = cookieStr.find(delimiter)) != std::string::npos) {
+            std::string token = cookieStr.substr(0, pos);
+            parseCookiePair(token);
+            cookieStr.erase(0, pos + delimiter.length());
+        }
+        
+        if (!cookieStr.empty()) {
+            parseCookiePair(cookieStr);
+        }
+    }
+    
+    void parseCookiePair(const std::string& pair) {
+        std::string trimmed = pair;
+        trimmed.erase(0, trimmed.find_first_not_of(" \t"));
+        trimmed.erase(trimmed.find_last_not_of(" \t") + 1);
+        
+        size_t equalsPos = trimmed.find('=');
+        if (equalsPos != std::string::npos) {
+            std::string name = trimmed.substr(0, equalsPos);
+            std::string value = trimmed.substr(equalsPos + 1);
+            requestCookies[name] = value;
         }
     }
 
@@ -317,7 +363,6 @@ nlohmann::json Request::json() const
 {
     try
     {
-
         std::string contentType = header("Content-Type");
         bool isJsonContent = contentType.find("application/json") != std::string::npos ||
                              contentType.find("application/problem+json") != std::string::npos;
@@ -355,6 +400,54 @@ std::string Request::ip() const
     return pimpl->clientIP;
 }
 
+std::string Request::hostname() const
+{
+    auto it = pimpl->requestHeaders.find("Host");
+    if (it != pimpl->requestHeaders.end()) {
+        std::string host = it->second;
+        size_t colonPos = host.find(':');
+        if (colonPos != std::string::npos) {
+            return host.substr(0, colonPos);
+        }
+        return host;
+    }
+    return "";
+}
+
+std::string Request::originalUrl() const
+{
+    if (!pimpl->fullUrl.empty()) {
+        return pimpl->fullUrl;
+    }
+
+    std::string url = pimpl->requestPath;
+    if (!pimpl->requestQueryString.empty()) {
+        url += "?" + pimpl->requestQueryString;
+    }
+    return url;
+}
+
+std::string Request::protocol() const
+{
+    return pimpl->requestProtocol;
+}
+
+bool Request::secure() const
+{
+    return pimpl->isSecure;
+}
+
+std::string Request::cookie(const std::string& name) const
+{
+    auto it = pimpl->requestCookies.find(name);
+    return (it != pimpl->requestCookies.end()) ? it->second : "";
+}
+
+std::map<std::string, std::string> Request::cookies() const
+{
+    return pimpl->requestCookies;
+}
+
 void Request::setRawRequest(const std::string& rawRequest)
 {
     pimpl->rawRequest = rawRequest;
@@ -367,14 +460,12 @@ void Request::setRouteParam(const std::string& name, const std::string& value)
 
 void Request::parse()
 {
-
     std::vector<std::string> lines;
     std::istringstream iss(pimpl->rawRequest);
     std::string line;
 
     while (std::getline(iss, line))
     {
-
         line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
         lines.push_back(line);
     }

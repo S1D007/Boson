@@ -10,6 +10,7 @@
 #include "router.hpp"
 #include "server.hpp"
 #include "static_files.hpp"
+#include "cookie.hpp"
 
 namespace boson
 {
