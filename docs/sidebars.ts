@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
     'intro',
     {
       type: 'category',
+      collapsible: false,
       label: 'Introduction',
       items: [
         'introduction/what-is-boson',
@@ -28,6 +29,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Getting Started',
+      collapsible: false,
       items: [
         'getting-started/installation',
         'getting-started/prerequisites',
@@ -39,6 +41,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      collapsible: false,
       label: 'Core Concepts',
       items: [
         'core-concepts/server',
@@ -52,6 +55,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: "Examples",
+      collapsible: false,
       items: [
         'examples/rest-api',
       ],
