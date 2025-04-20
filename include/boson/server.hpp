@@ -52,6 +52,14 @@ class Server
     Server& use(const Middleware& middleware);
 
     /**
+     * @brief Add path-specific middleware to the server
+     * @param path The path pattern for which this middleware should run
+     * @param middleware The middleware function to add
+     * @return Reference to this server for method chaining
+     */
+    Server& use(const std::string& path, const Middleware& middleware);
+
+    /**
      * @brief Mount a router at the specified path
      * @param path The base path for the router
      * @param router The router to mount

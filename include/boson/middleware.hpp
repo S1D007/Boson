@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace boson
 {
@@ -49,6 +50,13 @@ class NextFunction
     void setNext(const Middleware& middleware);
 
     /**
+     * @brief Set the request and response objects for this middleware
+     * @param req The HTTP request
+     * @param res The HTTP response
+     */
+    void setRequestResponse(const Request& req, Response& res);
+
+    /**
      * @brief Check if there is a next middleware
      * @return True if there is a next middleware, false otherwise
      */
@@ -57,6 +65,18 @@ class NextFunction
   private:
     class Impl;
     std::unique_ptr<Impl> pimpl;
+};
+
+/**
+ * @struct MiddlewareEntry
+ * @brief Stores middleware with optional path pattern
+ */
+struct MiddlewareEntry {
+    Middleware middleware;
+    std::optional<std::string> path;
+    
+    MiddlewareEntry(const Middleware& mw, const std::optional<std::string>& p = std::nullopt) 
+        : middleware(mw), path(p) {}
 };
 
 /**
@@ -74,6 +94,13 @@ class MiddlewareChain
      * @param middleware The middleware to add
      */
     void add(const Middleware& middleware);
+    
+    /**
+     * @brief Add middleware to the chain for a specific path
+     * @param path The path pattern to match
+     * @param middleware The middleware to add
+     */
+    void add(const std::string& path, const Middleware& middleware);
 
     /**
      * @brief Execute the middleware chain
@@ -82,9 +109,17 @@ class MiddlewareChain
      * @return True if the chain was executed completely, false otherwise
      */
     bool execute(const Request& req, Response& res);
+    
+    /**
+     * @brief Check if path pattern matches the request path
+     * @param pattern The path pattern
+     * @param path The request path
+     * @return True if pattern matches path, false otherwise
+     */
+    static bool pathMatches(const std::string& pattern, const std::string& path);
 
   private:
-    std::vector<Middleware> chain;
+    std::vector<MiddlewareEntry> chain;
 };
 
 } // namespace boson

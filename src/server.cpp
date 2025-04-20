@@ -288,28 +288,9 @@ class Server::Impl
 
         try
         {
+            bool continueProcessing = middlewareChain.execute(request, response);
 
-            bool continueProcessing = true;
-            for (const auto& middleware : globalMiddleware)
-            {
-                NextFunction next;
-                next.setNext([&continueProcessing](const Request&, Response&, NextFunction&)
-                             { continueProcessing = true; });
-
-                middleware(request, response, next);
-
-                if (!continueProcessing)
-                {
-                    break;
-                }
-
-                if (response.sent())
-                {
-                    break;
-                }
-            }
-
-            if (!response.sent())
+            if (!response.sent() && continueProcessing)
             {
                 bool handled = router.handle(request, response);
 
@@ -338,7 +319,7 @@ class Server::Impl
 
     ErrorHandler errorHandler;
     Router router;
-    std::vector<Middleware> globalMiddleware;
+    MiddlewareChain middlewareChain;
     std::atomic<bool> running;
     int port;
     std::string host;
@@ -376,7 +357,13 @@ void Server::stop()
 
 Server& Server::use(const Middleware& middleware)
 {
-    pimpl->globalMiddleware.push_back(middleware);
+    pimpl->middlewareChain.add(middleware);
+    return *this;
+}
+
+Server& Server::use(const std::string& path, const Middleware& middleware)
+{
+    pimpl->middlewareChain.add(path, middleware);
     return *this;
 }
 

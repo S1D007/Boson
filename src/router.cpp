@@ -180,45 +180,49 @@ bool Router::handle(const Request& req, Response& res) const
                 mutableReq.setRouteParam(param.first, param.second);
             }
 
-            // Create middleware processing chain
-            bool shouldContinue = true;
+            bool continueProcessing = true;
+            
+            std::vector<Middleware> middlewareChain;
+            
 
-            // Process router-level middleware first
-            for (const auto& middleware : routerMiddleware)
-            {
-                NextFunction next;
-                next.setNext([&shouldContinue](const Request&, Response&, NextFunction&)
-                             { shouldContinue = true; });
-
-                shouldContinue = false;     // Reset the flag
-                middleware(req, res, next); // Execute middleware
-
-                // If middleware didn't call next() or the response was already sent
-                if (!shouldContinue || res.sent())
-                {
+            std::copy(routerMiddleware.begin(), routerMiddleware.end(), 
+                     std::back_inserter(middlewareChain));
+            
+            std::copy(route.middleware.begin(), route.middleware.end(), 
+                     std::back_inserter(middlewareChain));
+                     
+            if (!middlewareChain.empty()) {
+                size_t currentIndex = 0;
+                
+                std::function<void(const Request&, Response&)> executeNext;
+                executeNext = [&](const Request& request, Response& response) {
+                    if (currentIndex >= middlewareChain.size() || response.sent()) {
+                        continueProcessing = true;
+                        return;
+                    }
+                    
+                    NextFunction next;
+                    next.setNext([&](const Request& r, Response& s, NextFunction& n) {
+                        currentIndex++;
+                        executeNext(request, response);
+                    });
+                    next.setRequestResponse(request, response);
+                    
+                    continueProcessing = false;
+                    middlewareChain[currentIndex](request, response, next);
+                };
+                
+                executeNext(req, res);
+                
+                if (res.sent()) {
                     return true;
                 }
             }
 
-            // Then process route-specific middleware
-            for (const auto& middleware : route.middleware)
-            {
-                NextFunction next;
-                next.setNext([&shouldContinue](const Request&, Response&, NextFunction&)
-                             { shouldContinue = true; });
-
-                shouldContinue = false;     // Reset the flag
-                middleware(req, res, next); // Execute middleware
-
-                // If middleware didn't call next() or the response was already sent
-                if (!shouldContinue || res.sent())
-                {
-                    return true;
-                }
+            if (continueProcessing && !res.sent()) {
+                route.handler(req, res);
             }
-
-            // Finally, execute the route handler
-            route.handler(req, res);
+            
             return true;
         }
     }

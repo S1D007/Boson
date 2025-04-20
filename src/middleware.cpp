@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <regex>
 
 namespace boson
 {
@@ -17,6 +18,8 @@ class NextFunction::Impl
     Middleware nextMiddleware;
     bool hasNextFlag;
     std::string error;
+    const Request* request;
+    Response* response;
 };
 
 NextFunction::NextFunction() : pimpl(std::make_unique<Impl>()) {}
@@ -25,12 +28,9 @@ NextFunction::~NextFunction() {}
 
 void NextFunction::operator()()
 {
-    if (pimpl->hasNextFlag)
+    if (pimpl->hasNextFlag && pimpl->request && pimpl->response)
     {
-
-        Request req;
-        Response res;
-        pimpl->nextMiddleware(req, res, *this);
+        pimpl->nextMiddleware(*pimpl->request, *pimpl->response, *this);
     }
 }
 
@@ -51,13 +51,46 @@ bool NextFunction::hasNext() const
     return pimpl->hasNextFlag;
 }
 
+void NextFunction::setRequestResponse(const Request& req, Response& res)
+{
+    pimpl->request = &req;
+    pimpl->response = &res;
+}
+
 MiddlewareChain::MiddlewareChain() {}
 
 MiddlewareChain::~MiddlewareChain() {}
 
 void MiddlewareChain::add(const Middleware& middleware)
 {
-    chain.push_back(middleware);
+    chain.emplace_back(middleware);
+}
+
+void MiddlewareChain::add(const std::string& path, const Middleware& middleware)
+{
+    chain.emplace_back(middleware, path);
+}
+
+bool MiddlewareChain::pathMatches(const std::string& pattern, const std::string& path)
+{
+    // Simple path matching
+    if (pattern == path) {
+        return true;
+    }
+    
+    // Check for wildcard prefix match (e.g., "/api/*")
+    if (pattern.length() > 0 && pattern.back() == '*') {
+        std::string prefix = pattern.substr(0, pattern.length() - 1);
+        return path.compare(0, prefix.length(), prefix) == 0;
+    }
+    
+    // Regex-based path matching
+    try {
+        std::regex pathRegex(pattern);
+        return std::regex_match(path, pathRegex);
+    } catch (const std::regex_error& e) {
+        return false;
+    }
 }
 
 bool MiddlewareChain::execute(const Request& req, Response& res)
@@ -67,34 +100,38 @@ bool MiddlewareChain::execute(const Request& req, Response& res)
         return true;
     }
 
+    const std::string& requestPath = req.path();
+    std::vector<Middleware> applicableMiddleware;
+    
+    for (const auto& entry : chain) {
+        if (!entry.path.has_value() || pathMatches(entry.path.value(), requestPath)) {
+            applicableMiddleware.push_back(entry.middleware);
+        }
+    }
+    
+    if (applicableMiddleware.empty()) {
+        return true;
+    }
+    
     size_t index = 0;
-
-    std::function<void(const std::string&)> nextFunction = [&](const std::string& error)
-    {
-        if (!error.empty())
-        {
-
+    
+    std::function<void(void)> runMiddleware = [&]() {
+        if (index >= applicableMiddleware.size() || res.sent()) {
             return;
         }
-
-        index++;
-
-        if (index >= chain.size())
-        {
-            return;
-        }
-
+        
         NextFunction next;
-        next.setNext([&](const Request& r, Response& s, NextFunction& n) { nextFunction(""); });
-
-        chain[index](req, res, next);
+        next.setNext([&](const Request& r, Response& s, NextFunction& n) {
+            index++;
+            runMiddleware();
+        });
+        next.setRequestResponse(req, res);
+        
+        applicableMiddleware[index](req, res, next);
     };
-
-    NextFunction next;
-    next.setNext([&](const Request& r, Response& s, NextFunction& n) { nextFunction(""); });
-
-    chain[0](req, res, next);
-
+    
+    runMiddleware();
+    
     return !res.sent();
 }
 
