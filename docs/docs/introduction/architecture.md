@@ -5,146 +5,170 @@ title: Architecture
 
 # Boson Architecture
 
-The Boson framework is built upon a clean, modular architecture that prioritizes performance, maintainability, and flexibility. This page provides a high-level overview of how the framework is structured and how its components interact.
+The Boson framework is built upon a clean, modular architecture that prioritizes performance, maintainability, and flexibility. This page provides a comprehensive overview of how the framework is structured and how its components interact.
 
 ## Architectural Principles
 
 Boson's architecture is guided by several key principles:
 
-1. **Separation of Concerns**: Each component has a distinct responsibility
+1. **Separation of Concerns**: Each component has a distinct responsibility with well-defined interfaces
 2. **Modularity**: Components are decoupled and can be used independently
-3. **Composability**: Components can be combined in flexible ways
-4. **Performance**: Optimized data flow with minimal overhead
+3. **Composability**: Components can be combined in flexible ways to build complex applications
+4. **Performance**: Optimized data flow with minimal overhead and efficient resource usage
 5. **Testability**: Components designed for easy testing in isolation
-6. **Extensibility**: Clear extension points for customization
+6. **Extensibility**: Clear extension points for customization and enhancement
 
 ## Core Architecture Layers
 
 Boson's architecture can be visualized as a stack of layers, each building upon the previous:
 
-<!-- ![Boson Architecture Diagram](/img/boson-architecture.png) -->
+```
+┌─────────────────────────────────────────┐
+│            Application Layer            │
+├─────────────────────────────────────────┤
+│            Controller Layer             │
+├─────────────────────────────────────────┤
+│             Routing Layer               │
+├─────────────────────────────────────────┤
+│            Middleware Layer             │
+├─────────────────────────────────────────┤
+│              Server Layer               │
+├─────────────────────────────────────────┤
+│               HTTP Layer                │
+├─────────────────────────────────────────┤
+│           Core Foundation Layer         │
+└─────────────────────────────────────────┘
+```
 
 ### 1. Core Foundation Layer
 
 The foundation layer provides essential services used throughout the framework:
 
-- **Memory Management**: Custom allocators and memory pools
-- **Event Loop**: Asynchronous execution environment
-- **Threading Model**: Thread pool and work distribution
-- **I/O Abstraction**: Non-blocking input/output operations
-- **Error Handling**: Exception management and propagation
-- **Logging**: Structured logging infrastructure
+- **Memory Management**: Smart pointers and RAII principles ensure proper resource handling
+- **Event Loop**: Asynchronous execution environment for handling multiple concurrent requests
+- **Threading Model**: Thread pool and work distribution for optimal performance
+- **I/O Abstraction**: Non-blocking input/output operations for handling many connections
+- **Error Handling**: Exception management and propagation throughout the application
+- **Logging**: Structured logging infrastructure for monitoring and debugging
 
 ### 2. HTTP Layer
 
 Built on the foundation layer, the HTTP layer manages the raw HTTP protocol:
 
-- **Connection Management**: TCP socket handling
-- **HTTP Parser**: Efficient parsing of HTTP messages
-- **Protocol Implementation**: HTTP/1.1 and HTTP/2 support
-- **TLS Integration**: Secure connection handling
-- **Buffer Management**: Efficient data buffering
+- **Connection Management**: Efficient TCP socket handling
+- **HTTP Parser**: Fast, secure parsing of HTTP messages
+- **Protocol Implementation**: HTTP/1.1 support with proper header handling
+- **TLS Integration**: Secure connection handling when configured
+- **Buffer Management**: Efficient data buffering for minimal copying
 
 ### 3. Server Layer
 
-The server layer orchestrates the HTTP communication:
+The server layer encapsulates the HTTP server and provides an interface for the application:
 
-- **Request Lifecycle**: Coordinating request handling from receipt to response
-- **Connection Pooling**: Managing persistent connections
-- **Timeout Management**: Handling request timeouts
-- **Worker Coordination**: Distributing work across threads
+- **Configuration**: Server settings and environment management
+- **Lifecycle Management**: Proper server startup, shutdown, and request handling
+- **Connection Pooling**: Efficient reuse of connections
+- **Resource Management**: Proper cleanup when the server terminates
+- **Monitoring Hooks**: Performance monitoring and statistics collection
 
 ### 4. Middleware Layer
 
-The middleware layer provides a pipeline for request processing:
+The middleware layer enables processing of requests and responses through a chain of handlers:
 
-- **Middleware Chain**: Sequential processing of middleware
-- **Global Middleware**: Applied to all requests
-- **Route Middleware**: Applied to specific routes
-- **Middleware Groups**: Logical groupings of middleware
+- **Middleware Chain**: Sequential processing of middleware functions
+- **Error Middleware**: Special middleware for error handling
+- **Built-in Middleware**: Common functionality like logging, CORS, etc.
+- **Custom Middleware**: Extension points for application-specific processing
+- **Next Function**: Control flow between middleware components
 
 ### 5. Routing Layer
 
-The routing layer determines how requests are dispatched:
+The routing layer directs incoming requests to the appropriate handler:
 
-- **Route Registration**: Defining URL patterns and handlers
-- **Route Matching**: Matching incoming requests to registered routes
-- **Parameter Extraction**: Pulling values from URL patterns
-- **Route Generation**: Creating URLs from route definitions
+- **Route Matching**: Path pattern matching with parameters
+- **HTTP Method Handling**: Different handlers for GET, POST, PUT, DELETE, etc.
+- **Parameter Extraction**: Path and query parameter parsing
+- **Route Groups**: Organizing related routes together
+- **Router Mounting**: Composable routers for modular applications
 
 ### 6. Controller Layer
 
-The controller layer organizes related route handlers:
+The controller layer organizes related route handlers into cohesive units:
 
-- **Controller Classes**: Grouping related actions
-- **Dependency Injection**: Providing services to controllers
-- **Action Methods**: Individual request handlers
-- **Response Generation**: Creating appropriate responses
+- **Controller Classes**: Group related functionality
+- **Resource Management**: RESTful resource handling
+- **Request Processing**: Business logic implementation
+- **Response Generation**: Creating appropriate HTTP responses
+- **Error Handling**: Controller-specific error management
 
 ### 7. Application Layer
 
-The application layer provides high-level services:
+The application layer is where developers build their specific applications:
 
-- **Configuration Management**: Environment-specific settings
-- **Service Container**: Dependency management
-- **Authentication**: User identification
-- **Authorization**: Access control
-- **Session Management**: State across requests
-- **Caching**: Response and data caching
+- **Business Logic**: Application-specific code
+- **Models**: Data structures and business objects
+- **Services**: Reusable business logic
+- **Configuration**: Application-specific settings
+- **Custom Middleware**: Application-specific request processing
 
-### 8. Database Layer
+## Component Interaction Diagram
 
-The database layer manages data persistence:
-
-- **Connection Management**: Database connectivity
-- **Query Building**: SQL generation
-- **Transaction Management**: ACID compliance
-- **Migration System**: Schema evolution
-- **Model Binding**: Data to object mapping
-
-## Component Communication
-
-Components in Boson communicate through well-defined interfaces:
-
-1. **Direct Method Calls**: For synchronous, in-process communication
-2. **Callbacks and Futures**: For asynchronous operations
-3. **Event System**: For loosely coupled communication
-4. **Dependency Injection**: For service provision
+```
+┌─────────┐     ┌─────────┐     ┌─────────┐     ┌──────────┐     ┌──────────┐
+│ Client  │────►│  HTTP   │────►│ Routing │────►│Middleware│────►│Controller│
+│ Request │     │ Server  │     │  Layer  │     │  Chain   │     │  Action  │
+└─────────┘     └─────────┘     └─────────┘     └──────────┘     └──────────┘
+                                                                     │
+┌─────────┐     ┌─────────┐     ┌─────────┐     ┌──────────┐         │
+│ Client  │◄────│  HTTP   │◄────│Response │◄────│Middleware│◄────────┘
+│Response │     │ Server  │     │ Object  │     │  Chain   │
+└─────────┘     └─────────┘     └─────────┘     └──────────┘
+```
 
 ## Request Lifecycle
 
 A typical request flows through Boson's architecture as follows:
 
-1. Client sends HTTP request to server
-2. HTTP parser processes raw request data
-3. Request object is created from parsed data
-4. Global middleware processes the request
-5. Router matches request to a route
-6. Route-specific middleware is applied
-7. Controller action is executed
-8. Response is generated
-9. Response middleware is applied in reverse order
-10. HTTP response is sent back to client
+1. **Receive**: Client sends HTTP request to server
+2. **Parse**: HTTP parser processes raw request data
+3. **Create Request Object**: Request object is created from parsed data
+4. **Global Middleware**: Global middleware processes the request
+5. **Route Matching**: Router matches request to a route
+6. **Route Middleware**: Route-specific middleware is applied
+7. **Controller Action**: Controller action or route handler is executed
+8. **Generate Response**: Response is generated with appropriate status, headers, and body
+9. **Response Middleware**: Response middleware is applied in reverse order
+10. **Send Response**: HTTP response is sent back to client
 
 ## Extensibility Points
 
 Boson provides several mechanisms for extending functionality:
 
-1. **Custom Middleware**: For request/response processing
-2. **Service Providers**: For registering services
-3. **Custom Commands**: For CLI functionality
-4. **Event Listeners**: For responding to system events
-5. **Custom Handlers**: For specialized request processing
+1. **Custom Middleware**: Add processing logic to the request/response pipeline
+2. **Route Handlers**: Implement custom request handling logic
+3. **Controller Classes**: Organize related routes and business logic
+4. **Custom Error Handlers**: Process exceptions in application-specific ways
+5. **Static File Handlers**: Configure static file serving with custom options
+
+## Core Classes and Relationships
+
+The Boson framework revolves around several key classes that work together:
+
+- **Server**: The main class that configures and runs the HTTP server
+- **Request**: Represents an HTTP request with access to methods, headers, params, etc.
+- **Response**: Represents an HTTP response with methods to set status, headers, body, etc.
+- **Middleware**: Functions that process requests and responses in sequence
+- **Router**: Matches request paths to handlers and organizes related routes
+- **Controller**: Optional class-based organization of related route handlers
 
 ## Performance Optimizations
 
 Boson incorporates various performance optimizations:
 
-1. **Memory Pooling**: Reducing allocation overhead
-2. **Zero-copy Operations**: Minimizing data copying
-3. **Lazy Loading**: Loading components only when needed
-4. **Compile-time Evaluation**: Using templates for static dispatch
-5. **Lock-free Algorithms**: Reducing contention
-6. **Caching**: At multiple layers of the architecture
+1. **Header-Only Components**: Some components are implemented as header-only for compiler optimization
+2. **Zero-copy Operations**: Minimizing data copying where possible
+3. **Request Pooling**: Reusing request objects to reduce allocation overhead
+4. **Efficient Routing**: Fast path matching algorithms
+5. **Minimal Dependencies**: Few external dependencies to reduce overhead
 
 Understanding this architecture will help you leverage Boson's capabilities effectively and extend the framework to meet your specific needs.

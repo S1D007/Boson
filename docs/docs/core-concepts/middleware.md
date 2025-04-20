@@ -283,11 +283,602 @@ app.get("/admin/dashboard", requireAuth({"admin"}), [](const boson::Request& req
 });
 ```
 
+## Advanced Middleware Patterns
+
+### Data Processing Pipeline
+
+Middleware can be used to build processing pipelines for request data:
+
+```cpp
+// Middleware to parse and validate JSON body
+auto parseJsonBody = [](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    if (req.header("Content-Type").find("application/json") == std::string::npos) {
+        next();
+        return;
+    }
+    
+    try {
+        // Parse JSON (already built into Boson request)
+        auto body = req.json();
+        
+        // Store the parsed body in the request for later middleware
+        req.set("parsedBody", body);
+        next();
+    } catch (const std::exception& e) {
+        res.status(400).jsonObject({
+            {"error", "Invalid JSON"},
+            {"message", e.what()}
+        });
+    }
+};
+
+// Middleware to validate user input schema
+auto validateUserSchema = [](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    if (!req.has("parsedBody")) {
+        next();
+        return;
+    }
+    
+    auto body = req.get<nlohmann::json>("parsedBody");
+    std::vector<std::string> missingFields;
+    
+    // Check required fields
+    for (const auto& field : {"name", "email", "password"}) {
+        if (!body.contains(field) || body[field].empty()) {
+            missingFields.push_back(field);
+        }
+    }
+    
+    if (!missingFields.empty()) {
+        nlohmann::json errorResponse = {{"error", "Validation failed"}};
+        errorResponse["missing_fields"] = missingFields;
+        res.status(400).jsonObject(errorResponse);
+        return;
+    }
+    
+    // Additional validation logic
+    auto email = body["email"].get<std::string>();
+    if (email.find("@") == std::string::npos) {
+        res.status(400).jsonObject({
+            {"error", "Invalid email format"}
+        });
+        return;
+    }
+    
+    next();
+};
+
+// Register the middleware chain
+app.post("/users", parseJsonBody, validateUserSchema, [](const boson::Request& req, boson::Response& res) {
+    // By now we have valid JSON with all required fields
+    auto userData = req.get<nlohmann::json>("parsedBody");
+    
+    // Process the validated user data
+    res.status(201).jsonObject({
+        {"message", "User created successfully"},
+        {"user", {
+            {"name", userData["name"]},
+            {"email", userData["email"]}
+        }}
+    });
+});
+```
+
+### Conditional Middleware
+
+Execute middleware conditionally based on request properties:
+
+```cpp
+// Factory function to create conditional middleware
+auto when = [](std::function<bool(const boson::Request&)> condition, boson::MiddlewareFunction middleware) {
+    return [condition, middleware](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+        if (condition(req)) {
+            middleware(req, res, next);
+        } else {
+            next();
+        }
+    };
+};
+
+// Example conditions
+auto isApiRequest = [](const boson::Request& req) {
+    return req.path().starts_with("/api");
+};
+
+auto isAuthenticatedRequest = [](const boson::Request& req) {
+    return !req.header("Authorization").empty();
+};
+
+// Conditional middleware usage
+app.use(when(isApiRequest, corsMiddleware));
+app.use(when(isAuthenticatedRequest, userActivityLogger));
+```
+
+### Middleware for Specific HTTP Methods
+
+Apply middleware only for specific HTTP methods:
+
+```cpp
+// Method-specific middleware
+auto onlyForPost = [](boson::MiddlewareFunction middleware) {
+    return [middleware](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+        if (req.method() == "POST") {
+            middleware(req, res, next);
+        } else {
+            next();
+        }
+    };
+};
+
+// Apply middleware only to POST requests
+app.use(onlyForPost(parseJsonBody));
+```
+
+### Request Context Sharing
+
+Share data between middleware and route handlers:
+
+```cpp
+// First middleware populates context
+app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    // Create a request-scoped context
+    req.set("context", std::make_shared<std::unordered_map<std::string, std::any>>());
+    
+    // Set some data
+    auto context = req.get<std::shared_ptr<std::unordered_map<std::string, std::any>>>("context");
+    (*context)["requestTime"] = std::chrono::system_clock::now();
+    (*context)["clientIp"] = req.ip();
+    
+    next();
+});
+
+// Later middleware can access and modify the context
+app.use("/api", [](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    auto context = req.get<std::shared_ptr<std::unordered_map<std::string, std::any>>>("context");
+    (*context)["isApiRequest"] = true;
+    
+    next();
+});
+
+// Route handler can access the context
+app.get("/api/status", [](const boson::Request& req, boson::Response& res) {
+    auto context = req.get<std::shared_ptr<std::unordered_map<std::string, std::any>>>("context");
+    
+    res.jsonObject({
+        {"status", "ok"},
+        {"isApi", std::any_cast<bool>((*context)["isApiRequest"])},
+        {"ip", std::any_cast<std::string>((*context)["clientIp"])}
+    });
+});
+```
+
+### Async Middleware
+
+Handle asynchronous operations in middleware:
+
+```cpp
+// Async middleware pattern using std::future and promises
+auto asyncMiddleware = [](std::function<void(const boson::Request&, boson::Response&, 
+                                          std::function<void()>, std::function<void(std::string)>)> operation) {
+    return [operation](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+        // Success callback
+        auto success = [&next]() {
+            next();
+        };
+        
+        // Error callback
+        auto error = [&res](const std::string& message) {
+            res.status(500).jsonObject({{"error", message}});
+        };
+        
+        // Execute the async operation
+        operation(req, res, success, error);
+    };
+};
+
+// Example usage with a database query
+auto fetchUserFromDb = asyncMiddleware([](const boson::Request& req, boson::Response& res, 
+                                      std::function<void()> success, std::function<void(std::string)> error) {
+    std::string userId = req.param("id");
+    
+    // Simulate async database query
+    std::thread([userId, &req, success, error]() {
+        try {
+            // Simulated DB query
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            
+            // Simulate found/not found
+            if (userId == "123") {
+                // User found, attach to request
+                req.set("user", nlohmann::json({
+                    {"id", "123"},
+                    {"name", "John Doe"},
+                    {"email", "john@example.com"}
+                }));
+                success();
+            } else {
+                error("User not found");
+            }
+        } catch (const std::exception& e) {
+            error(e.what());
+        }
+    }).detach();
+});
+
+// Use the async middleware
+app.get("/users/:id", fetchUserFromDb, [](const boson::Request& req, boson::Response& res) {
+    // Now we can safely access the user data
+    auto user = req.get<nlohmann::json>("user");
+    res.jsonObject(user);
+});
+```
+
+### Middleware Composition
+
+Compose multiple middleware into a single unit:
+
+```cpp
+// Middleware composition function
+auto compose = [](std::initializer_list<boson::MiddlewareFunction> middlewares) {
+    return [middlewares](const boson::Request& req, boson::Response& res, boson::NextFunction& outerNext) {
+        // Create a vector from the initializer list
+        std::vector<boson::MiddlewareFunction> middlewareVector(middlewares);
+        
+        // Function to execute middlewares in sequence
+        std::function<void(size_t)> executeMiddleware;
+        
+        executeMiddleware = [&](size_t index) {
+            if (index >= middlewareVector.size()) {
+                // All middleware executed, continue to the next outer middleware
+                outerNext();
+                return;
+            }
+            
+            // Create a next function that moves to the next middleware
+            boson::NextFunction innerNext = [&executeMiddleware, index]() {
+                executeMiddleware(index + 1);
+            };
+            
+            // Execute the current middleware
+            middlewareVector[index](req, res, innerNext);
+        };
+        
+        // Start executing the first middleware
+        executeMiddleware(0);
+    };
+};
+
+// Usage example
+auto apiMiddleware = compose({
+    corsMiddleware,
+    requestLogger,
+    authenticate
+});
+
+// Apply the composed middleware
+app.use("/api", apiMiddleware);
+```
+
+## Built-in Middleware
+
+Boson provides several built-in middleware functions for common tasks:
+
+### Body Parser
+
+```cpp
+// Add body parser middleware for different content types
+app.use(boson::bodyParser.json());                  // application/json
+app.use(boson::bodyParser.urlencoded());            // application/x-www-form-urlencoded
+app.use(boson::bodyParser.text());                  // text/plain
+app.use(boson::bodyParser.raw());                   // raw binary data
+```
+
+### Cookie Parser
+
+```cpp
+// Parse cookies in incoming requests
+app.use(boson::cookieParser());
+
+// Access parsed cookies in route handlers
+app.get("/profile", [](const boson::Request& req, boson::Response& res) {
+    std::string sessionId = req.cookie("sessionId");
+    if (sessionId.empty()) {
+        res.redirect("/login");
+        return;
+    }
+    res.send("User profile");
+});
+```
+
+### Static Files
+
+```cpp
+// Serve static files with default options
+app.use(boson::staticFiles("public"));
+
+// With custom options
+std::unordered_map<std::string, std::string> options = {
+    {"maxAge", "86400000"},                 // Cache for one day
+    {"index", "index.html"},                // Default index file
+    {"dotfiles", "ignore"},                 // Ignore dotfiles
+    {"etag", "true"},                       // Enable ETag headers
+    {"lastModified", "true"},               // Enable Last-Modified headers
+    {"fallthrough", "true"}                 // Continue if file not found
+};
+app.use(boson::staticFiles("public", options));
+```
+
+### Compression
+
+```cpp
+// Add compression middleware
+app.use(boson::compression({
+    {"level", "6"},                        // Compression level (1-9)
+    {"threshold", "1024"},                 // Only compress responses larger than this
+    {"filter", "text/*, application/json"} // Only compress these content types
+}));
+```
+
+## Middleware Visualization
+
+To better understand the middleware execution flow, consider this diagram of a typical request through a Boson application:
+
+```
+┌───────────────────────────────────────────────────────────┐
+│                      HTTP REQUEST                         │
+└─────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│                Global Middleware (app.use())              │
+│                                                           │
+│  ┌───────────────┐  ┌──────────────┐  ┌─────────────────┐ │
+│  │  Body Parser  │→ │ Cookie Parser│→ │ Request Logger  │→│
+│  └───────────────┘  └──────────────┘  └─────────────────┘ │
+│                                                           │
+└─────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│             Path-Specific Middleware ("/api")             │
+│                                                           │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  │
+│  │     CORS      │→ │ Authentication│→ │ Rate Limiter  │→ │
+│  └───────────────┘  └───────────────┘  └───────────────┘  │
+│                                                           │
+└─────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│                Route Handler (app.get())                  │
+│                                                           │
+│  ┌───────────────────────────────────────────────────┐    │
+│  │                Business Logic                     │    │
+│  └───────────────────────────────────────────────────┘    │
+│                                                           │
+└─────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│              Response Processing Middleware               │
+│                                                           │
+│  ┌───────────────┐  ┌──────────────┐  ┌────────────────┐  │
+│  │  Compression  │← │ Error Handler│← │  Response Time │← │
+│  └───────────────┘  └──────────────┘  └────────────────┘  │
+│                                                           │
+└─────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│                      HTTP RESPONSE                        │
+└───────────────────────────────────────────────────────────┘
+```
+
 ## Middleware Best Practices
 
-1. **Keep Middleware Focused**: Each middleware should have a single responsibility
-2. **Order Matters**: Add middleware in the right order (e.g., logging before authentication)
-3. **Don't Forget `next()`**: Always call `next()` unless you want to end the request
-4. **Error Handling**: Use try-catch blocks to handle errors in middleware
-5. **Reuse Middleware**: Define reusable middleware functions
-6. **Test Middleware**: Write tests for your middleware functions
+### 1. Keep Middleware Focused
+
+Each middleware should have a single responsibility:
+
+```cpp
+// Good - Single responsibility
+auto validateApiKey = [](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    std::string apiKey = req.header("X-API-Key");
+    if (apiKey.empty()) {
+        res.status(401).jsonObject({{"error", "API key required"}});
+        return;
+    }
+    next();
+};
+
+// Avoid - Doing too many things in one middleware
+auto badMiddleware = [](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    // Parsing body, validating API key, checking user permissions, etc.
+    // Too many responsibilities in one middleware
+};
+```
+
+### 2. Order Matters
+
+Add middleware in the right order. Generally:
+1. Logging/monitoring middleware first
+2. Request parsing middleware (body parsers, etc.)
+3. Security middleware (CORS, authentication, etc.)
+4. Application-specific middleware
+5. Error handling middleware last
+
+```cpp
+// Good middleware order
+app.use(requestLogger);            // Log all requests immediately
+app.use(boson::bodyParser.json()); // Parse request body
+app.use(corsMiddleware);           // Handle CORS
+app.use("/api", authenticate);     // Authenticate API routes
+app.use(errorHandler);             // Catch errors
+```
+
+### 3. Always Handle Next
+
+Always call `next()` unless you intend to end the request-response cycle:
+
+```cpp
+// Good - Always calls next() or sends a response
+app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    if (someCondition()) {
+        next();
+    } else {
+        res.status(400).send("Bad request");
+    }
+});
+
+// Bad - Might forget to call next()
+app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    if (someCondition()) {
+        next();
+    }
+    // Missing else branch - request will hang if condition is false
+});
+```
+
+### 4. Error Handling
+
+Use try-catch blocks to handle errors in middleware:
+
+```cpp
+// Good - Handles errors properly
+app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    try {
+        // Something that might throw
+        next();
+    } catch (const std::exception& e) {
+        res.status(500).jsonObject({{"error", e.what()}});
+    }
+});
+```
+
+### 5. Make Middleware Reusable
+
+Design middleware to be reusable with configurable options:
+
+```cpp
+// Good - Reusable middleware with options
+auto rateLimiter = [](int maxRequests, std::chrono::seconds window) {
+    std::unordered_map<std::string, std::pair<int, std::chrono::steady_clock::time_point>> clients;
+    
+    return [=, &clients](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+        // Implementation with the provided options
+    };
+};
+
+// Usage with different options
+app.use("/api", rateLimiter(100, std::chrono::seconds(60)));  // 100 req/min for API
+app.use("/login", rateLimiter(10, std::chrono::seconds(60))); // 10 req/min for login
+```
+
+### 6. Test Middleware
+
+Write tests for your middleware functions:
+
+```cpp
+// Example test for middleware (pseudocode)
+void testAuthMiddleware() {
+    // Create mock request and response
+    boson::Request mockReq;
+    boson::Response mockRes;
+    bool nextCalled = false;
+    
+    // Mock next function
+    auto mockNext = [&nextCalled]() { nextCalled = true; };
+    
+    // Test with no token
+    authenticate(mockReq, mockRes, mockNext);
+    assert(mockRes.statusCode() == 401);
+    assert(!nextCalled);
+    
+    // Test with valid token
+    mockReq.setHeader("Authorization", "Bearer valid-token");
+    nextCalled = false;
+    mockRes.reset();
+    authenticate(mockReq, mockRes, mockNext);
+    assert(nextCalled);
+    
+    // More test cases...
+}
+```
+
+### 7. Document Your Middleware
+
+Clearly document your middleware, especially if they're reusable:
+
+```cpp
+/**
+ * Rate limiting middleware that restricts the number of requests from a single IP.
+ * 
+ * @param maxRequests Maximum number of requests allowed within the time window
+ * @param window Time window in seconds
+ * @return Middleware function that implements rate limiting
+ * 
+ * Usage:
+ *   app.use("/api", rateLimiter(100, std::chrono::seconds(60))); // 100 req/min
+ */
+auto rateLimiter = [](int maxRequests, std::chrono::seconds window) {
+    // Implementation
+};
+```
+
+### 8. Use Middleware for Cross-cutting Concerns
+
+Identify cross-cutting concerns and implement them as middleware:
+
+- Authentication and authorization
+- Logging and monitoring
+- Performance tracking
+- Input validation
+- Response formatting
+- Error handling
+- Security features (CORS, CSRF protection, etc.)
+
+### 9. Be Mindful of Performance
+
+Middleware runs on every matching request, so keep it efficient:
+
+```cpp
+// Good - Efficient middleware
+app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    // Simple, fast operations
+    std::cout << req.method() << " " << req.path() << std::endl;
+    next();
+});
+
+// Avoid - Unnecessary complexity in frequently used middleware
+app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    // Expensive operations on every request
+    std::string requestBody = req.body();
+    // Complex parsing, regex operations, file I/O, etc.
+    next();
+});
+```
+
+### 10. Consider Conditional Execution
+
+Skip unnecessary middleware processing:
+
+```cpp
+// Skip middleware processing for certain paths
+app.use([](const boson::Request& req, boson::Response& res, boson::NextFunction& next) {
+    // Skip processing for static files
+    if (req.path().starts_with("/public/")) {
+        next();
+        return;
+    }
+    
+    // Normal processing for other routes
+    // ...
+    next();
+});
+```
+
+## Conclusion
+
+Middleware is a powerful pattern that allows you to modularize your request-processing logic and keep your route handlers focused on their specific responsibilities. By mastering middleware in Boson, you can create clean, well-structured applications with proper separation of concerns.
+
+The next section will cover [Request and Response](./request-response) objects in detail.

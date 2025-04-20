@@ -54,7 +54,6 @@ const sidebars: SidebarsConfig = {
       label: "Examples",
       items: [
         'examples/rest-api',
-        'examples/websocket-chat',
       ],
     }
   ],
