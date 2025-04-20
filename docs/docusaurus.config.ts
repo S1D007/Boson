@@ -34,6 +34,12 @@ const config: Config = {
         theme: {
           customCss: "./src/css/custom.css",
         },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/tags/**'],
+          filename: 'sitemap.xml',
+        },
       } satisfies Preset.Options,
     ],
   ],
@@ -62,21 +68,6 @@ const config: Config = {
     },
     footer: {
       style: "light",
-      links: [
-        {
-          title: "Docs",
-          items: [
-            {
-              label: "Getting Started",
-              to: "/getting-started",
-            },
-            {
-              label: "Core Concepts",
-              to: "/core-concepts",
-            },
-          ],
-        },
-      ],
       copyright: `Copyright © ${new Date().getFullYear()} Boson Framework. Built with ❤️ by Siddhant in India(🇮🇳).`,
     },
     prism: {

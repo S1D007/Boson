@@ -3,21 +3,1507 @@
  * and scoped locally.
  */
 
-.heroBanner {
-  padding: 4rem 0;
-  text-align: center;
+/* Hero Section */
+.hero {
   position: relative;
+  padding: 7rem 0 5rem;
   overflow: hidden;
+  background: linear-gradient(135deg, #1a1d35 0%, #0d0f22 100%);
+  color: white;
+  min-height: 650px;
+  display: flex;
+  align-items: center;
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+.particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
-.buttons {
+.heroInner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.heroContent {
+  text-align: center;
+  margin-bottom: 3rem;
+  max-width: 800px;
+}
+
+.heroLogo {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.logoIcon {
+  font-size: 2.5rem;
+  color: #0099ff;
+  margin-right: 0.5rem;
+}
+
+.logoText {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #0099ff, #6c5ce7);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(45deg, #ffffff 30%, #b3e0ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  line-height: 1.2;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.heroButtons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.primaryButton {
+  background: linear-gradient(45deg, #0099ff, #0066cc);
+  border: none;
+  color: white;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.25);
+}
+
+.secondaryButton {
+  /* background: rgba(255, 255, 255, 0.1); */
+  border: none;
+  backdrop-filter: blur(10px);
+  color: white;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.secondaryButton:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.githubButton {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.githubButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.buttonIcon {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+  vertical-align: middle;
+}
+
+.buttonIconRight {
+  margin-left: 0.5rem;
+  font-size: 1.2rem;
+  vertical-align: middle;
+}
+
+.heroStats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.statCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  width: 230px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s, background 0.3s;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.statNumber {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(45deg, #0099ff, #22d3ee);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Common Section Styles */
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.sectionSubtitle {
+  font-size: 1.2rem;
+  color: var(--ifm-color-emphasis-700);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Features Section */
+.features {
+  padding: 6rem 0;
+  background: var(--ifm-background-color);
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.featureItem {
+  padding: 2rem;
+  border-radius: 12px;
+  background: var(--ifm-card-background-color);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.featureItem:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.featureIconWrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--ifm-color-primary-lightest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.featureIcon {
+  font-size: 1.8rem;
+  color: #000
+}
+
+.featureTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.featureDescription {
+  font-size: 1rem;
+  color: var(--ifm-color-emphasis-700);
+  flex: 1;
+}
+
+/* Code Section */
+.codeSection {
+  padding: 6rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.codeContainer {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: center;
+}
+
+.codeWindow {
+  width: 100%;
+  max-width: 800px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.codeWindowHeader {
+  background: #343a40;
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.codeWindowButton {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.codeWindowButton:nth-child(1) {
+  background-color: #ff5f56;
+}
+
+.codeWindowButton:nth-child(2) {
+  background-color: #ffbd2e;
+}
+
+.codeWindowButton:nth-child(3) {
+  background-color: #27c93f;
+}
+
+.codeWindowTitle {
+  margin-left: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #abb2bf;
+}
+
+.codeWindowContent {
+  background: #282c34;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+/* Performance Section */
+.performanceSection {
+  padding: 6rem 0;
+  background: var(--ifm-color-emphasis-100);
+  position: relative;
+}
+
+.performanceSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(90deg, #ff3300, #0066ff);
+}
+
+.performanceSection .sectionTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  background: linear-gradient(45deg, #ff3300, #ff9900);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.performanceSection .sectionSubtitle {
+  font-size: 1.4rem;
+  font-weight: 500;
+  max-width: 800px;
+}
+
+.comparisonIntro {
+  max-width: 800px;
+  margin: 2rem auto;
+  text-align: center;
+}
+
+.comparisonText {
+  font-size: 1.6rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.textHighlight {
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+}
+
+.textDanger {
+  font-weight: 700;
+  color: #ff3300;
+}
+
+.textSuccess {
+  font-weight: 700;
+  color: #00cc66;
+}
+
+.barChart {
+  margin-top: 4rem;
+}
+
+.barGroup {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.barLabel {
+  width: 150px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.bosunLabel {
+  font-weight: 700;
+  color: var(--ifm-color-primary-darker);
+}
+
+.bossLabel {
+  font-size: 0.8rem;
+  font-weight: 800;
+  background: linear-gradient(45deg, #ff3300, #ff9900);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.barWrapper {
+  flex: 1;
+  height: 40px;
+  background: var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.bar {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.barValue {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.barComment {
+  position: absolute;
+  right: 15px;
+  top: -25px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+  font-style: italic;
+  background: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: rotate(-5deg);
+}
+
+/* Bar animations and styles */
+.bosonBar {
+  background: linear-gradient(45deg, #0051ff, #00a3ff);
+  width: 0;
+  animation: bosonFill 1.5s cubic-bezier(0.85, 0, 0.15, 1) forwards;
+}
+
+.goBar {
+  background: linear-gradient(45deg, #68d391, #38a169);
+  width: 0;
+  animation: goFill 1.5s cubic-bezier(0.85, 0, 0.15, 1) forwards 0.2s;
+}
+
+.nodeBar {
+  background: linear-gradient(45deg, #805ad5, #553c9a);
+  width: 0;
+  animation: nodeFill 1.5s cubic-bezier(0.85, 0, 0.15, 1) forwards 0.4s;
+}
+
+.pythonBar {
+  background: linear-gradient(45deg, #f6ad55, #dd6b20);
+  width: 0;
+  animation: pythonFill 1.5s cubic-bezier(0.85, 0, 0.15, 1) forwards 0.6s;
+}
+
+@keyframes bosonFill {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+@keyframes goFill {
+  0% { width: 0; }
+  100% { width: 35%; }
+}
+
+@keyframes nodeFill {
+  0% { width: 0; }
+  100% { width: 20%; }
+}
+
+@keyframes pythonFill {
+  0% { width: 0; }
+  100% { width: 15%; }
+}
+
+/* Metrics comparison */
+.performanceMetrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  margin: 5rem 0 3rem;
+}
+
+.metricBox {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  width: 260px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  border-top: 5px solid var(--ifm-color-primary);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.metricBox:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.metricValue {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(45deg, var(--ifm-color-primary), var(--ifm-color-primary-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.metricLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.metricSubtext {
+  font-size: 1rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* Memory savings section */
+.memorySavings {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  margin: 2rem auto;
+  max-width: 900px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.memorySavingsTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.memorySavingsContent {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.memorySavingsIcon {
+  flex-shrink: 0;
+}
+
+.largeIcon {
+  font-size: 5rem;
+  color: var(--ifm-color-primary);
+}
+
+.memorySavingsText {
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+.memorySavingsText p {
+  margin-bottom: 1rem;
+}
+
+.performanceCTA {
+  text-align: center;
+  margin-top: 4rem;
+}
+
+.ctaBold {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .performanceSection .sectionTitle {
+    font-size: 2.5rem;
+  }
+  
+  .comparisonText {
+    font-size: 1.4rem;
+  }
+  
+  .barLabel {
+    width: 120px;
+    font-size: 1rem;
+  }
+  
+  .barWrapper {
+    height: 35px;
+  }
+  
+  .memorySavingsContent {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .memorySavingsText {
+    font-size: 1.1rem;
+  }
+  
+  .performanceMetrics {
+    gap: 1rem;
+  }
+  
+  .metricBox {
+    width: calc(50% - 1rem);
+    padding: 1.5rem;
+  }
+  
+  .metricValue {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .performanceSection .sectionTitle {
+    font-size: 2rem;
+  }
+  
+  .comparisonText {
+    font-size: 1.2rem;
+  }
+  
+  .barGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 3rem;
+  }
+  
+  .barLabel {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .metricBox {
+    width: 100%;
+  }
+  
+  .memorySavings {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* Use Cases Section */
+.useCasesSection {
+  padding: 6rem 0;
+  background: linear-gradient(180deg, var(--ifm-background-surface-color) 0%, var(--ifm-background-color) 100%);
+}
+
+.useCasesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.useCaseCard {
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
+  background: var(--ifm-card-background-color);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-align: center;
+  border-top: 4px solid var(--card-accent-color, var(--ifm-color-primary));
+}
+
+.useCaseCard:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.useCaseIcon {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--card-accent-color, var(--ifm-color-primary));
+}
+
+.useCaseTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.useCaseDescription {
+  font-size: 1rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* Getting Started Section */
+.gettingStartedSection {
+  padding: 6rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.stepsContainer {
+  max-width: 800px;
+  margin: 3rem auto 2rem;
+}
+
+.step {
+  display: flex;
+  margin-bottom: 3rem;
+}
+
+.stepNumber {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ifm-color-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 5px 15px rgba(0, 153, 255, 0.3);
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.stepCommand {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ctaContainer {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+/* Footer Banner */
+.footerBanner {
+  padding: 6rem 0;
+  background: linear-gradient(135deg, #0051ff 0%, #6601ea 100%);
+  color: white;
+}
+
+.footerBannerContent {
+  text-align: center;
+}
+
+.footerBannerTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.footerBannerText {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.footerBannerButtons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.whiteButton {
+  background: white;
+  color: #0051ff;
+  border: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.whiteButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.15);
+  background: white;
+  color: #0066cc;
+}
+
+.githubButtonAlt {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.githubButtonAlt:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 996px) {
+  .hero {
+    padding: 5rem 0 3rem;
+  }
+  
+  .heroTitle {
+    font-size: 2.3rem;
+  }
+  
+  .heroStats {
+    gap: 1rem;
+  }
+  
+  .statCard {
+    width: 110px;
+  }
+  
+  .featuresGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .useCasesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .barLabel {
+    width: 100px;
+  }
+}
+
+/* Updated Responsive Styles */
+
+/* Base mobile optimizations */
+@media screen and (max-width: 996px) {
+  /* Hero section */
+  .hero {
+    padding: 4rem 0 3rem;
+    min-height: auto;
+  }
+  
+  .heroTitle {
+    font-size: 2.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .heroSubtitle {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+  }
+  
+  .heroStats {
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .statCard {
+    width: 110px;
+    padding: 1rem;
+  }
+
+  /* Feature section */  
+  .features {
+    padding: 4rem 0;
+  }
+  
+  .featuresGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    padding: 0 1rem;
+  }
+
+  /* Section headings */
+  .sectionTitle {
+    font-size: 2.2rem;
+    padding: 0 1rem;
+  }
+  
+  .sectionSubtitle {
+    font-size: 1.1rem;
+    padding: 0 1rem;
+  }
+  
+  /* Use cases */
+  .useCasesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    padding: 0 1rem;
+  }
+  
+  /* Performance section */
+  .performanceSection .sectionTitle {
+    font-size: 2.3rem;
+  }
+  
+  .barLabel {
+    width: 100px;
+  }
+  
+  .comparisonText {
+    font-size: 1.5rem;
+    padding: 0 1rem;
+  }
+  
+  /* Code section */
+  .codeSection {
+    padding: 4rem 0;
+  }
+  
+  .codeContainer {
+    padding: 0 1rem;
+  }
+  
+  /* Steps section */
+  .stepsContainer {
+    padding: 0 1rem;
+  }
+}
+
+/* Tablet optimization */
+@media screen and (max-width: 768px) {
+  /* Hero section */
+  .hero {
+    padding: 3.5rem 0 2.5rem;
+  }
+  
+  .heroTitle {
+    font-size: 1.8rem;
+  }
+  
+  .heroContent {
+    margin-bottom: 2rem;
+  }
+  
+  .logoIcon {
+    font-size: 2rem;
+  }
+  
+  .logoText {
+    font-size: 2rem;
+  }
+  
+  .heroButtons {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .heroButtons > a {
+    width: 100%;
+    margin: 0;
+  }
+  
+  .heroStats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+  
+  .statCard {
+    width: 100%;
+    padding: 1rem;
+  }
+  
+  .statNumber {
+    font-size: 1.5rem;
+  }
+  
+  /* Section styles */
+  .sectionTitle {
+    font-size: 1.8rem;
+  }
+  
+  .sectionSubtitle {
+    font-size: 1rem;
+  }
+  
+  /* Features section */
+  .features {
+    padding: 3rem 0;
+  }
+  
+  .featuresGrid {
+    gap: 1rem;
+  }
+  
+  .featureItem {
+    padding: 1.5rem;
+  }
+  
+  .featureIconWrapper {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 1rem;
+  }
+  
+  .featureTitle {
+    font-size: 1.2rem;
+    margin-bottom: 0.7rem;
+  }
+  
+  /* Performance section */
+  .performanceSection {
+    padding: 3rem 0;
+  }
+  
+  .performanceSection .sectionTitle {
+    font-size: 1.8rem;
+  }
+  
+  .comparisonText {
+    font-size: 1.2rem;
+  }
+  
+  .barGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+  }
+  
+  .barLabel {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .barWrapper {
+    height: 30px;
+  }
+  
+  .barComment {
+    right: 8px;
+    top: -22px;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+  }
+  
+  .barValue {
+    font-size: 0.9rem;
+  }
+  
+  .performanceMetrics {
+    gap: 1rem;
+    margin: 3rem 0 2rem;
+  }
+  
+  .metricBox {
+    width: calc(50% - 0.5rem);
+    padding: 1.2rem;
+  }
+  
+  .metricValue {
+    font-size: 2.5rem;
+  }
+  
+  .metricLabel {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .metricSubtext {
+    font-size: 0.9rem;
+  }
+  
+  .memorySavings {
+    padding: 1.5rem;
+  }
+  
+  .memorySavingsTitle {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+  
+  .memorySavingsContent {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .memorySavingsText {
+    font-size: 1rem;
+    text-align: center;
+  }
+  
+  .largeIcon {
+    font-size: 3.5rem;
+  }
+  
+  .performanceCTA {
+    margin-top: 2rem;
+  }
+  
+  .ctaBold {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Use cases section */
+  .useCasesSection {
+    padding: 3rem 0;
+  }
+  
+  .useCasesGrid {
+    gap: 1rem;
+  }
+  
+  .useCaseCard {
+    padding: 1.5rem;
+  }
+  
+  .useCaseIcon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .useCaseTitle {
+    font-size: 1.2rem;
+    margin-bottom: 0.7rem;
+  }
+  
+  /* Getting started section */
+  .gettingStartedSection {
+    padding: 3rem 0;
+  }
+  
+  .step {
+    flex-direction: column;
+    margin-bottom: 2rem;
+  }
+  
+  .stepNumber {
+    margin-bottom: 1rem;
+    margin-right: 0;
+  }
+  
+  .stepTitle {
+    font-size: 1.2rem;
+    margin-bottom: 0.7rem;
+  }
+  
+  .ctaContainer {
+    margin-top: 2rem;
+  }
+  
+  /* Footer banner */
+  .footerBanner {
+    padding: 3rem 0;
+  }
+  
+  .footerBannerTitle {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .footerBannerText {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .footerBannerButtons {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+}
+
+/* Small mobile optimization */
+@media screen and (max-width: 480px) {
+  /* Hero section */
+  .hero {
+    padding: 3rem 1rem 2rem;
+  }
+  
+  .heroTitle {
+    font-size: 1.6rem;
+  }
+  
+  .heroSubtitle {
+    font-size: 1rem;
+  }
+  
+  .logoIcon {
+    font-size: 1.8rem;
+  }
+  
+  .logoText {
+    font-size: 1.8rem;
+  }
+  
+  .statCard {
+    padding: 0.8rem;
+  }
+  
+  .statNumber {
+    font-size: 1.3rem;
+  }
+  
+  .statLabel {
+    font-size: 0.8rem;
+  }
+  
+  /* Section styles */
+  .sectionTitle {
+    font-size: 1.6rem;
+  }
+  
+  .sectionSubtitle {
+    font-size: 0.95rem;
+  }
+  
+  .performanceSection .sectionTitle {
+    font-size: 1.6rem;
+  }
+  
+  .comparisonText {
+    font-size: 1.1rem;
+  }
+  
+  /* Performance metrics */
+  .performanceMetrics {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .metricBox {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  /* Features grid */
+  .featuresGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Use cases grid */
+  .useCasesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Adjustments for tiny screens */
+  .codeWindowContent pre {
+    font-size: 0.8rem;
+  }
+  
+  .barValue {
+    font-size: 0.75rem;
+  }
+  
+  .barComment {
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    top: -20px;
+    right: 5px;
+  }
+  
+  .memorySavingsTitle {
+    font-size: 1.3rem;
+  }
+  
+  .memorySavingsText {
+    font-size: 0.95rem;
+  }
+  
+  /* Container padding */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+/* Mobile-Optimized Performance Section Styles */
+
+/* Added for better mobile display of bar groups */
+.barLabelContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+/* Mobile bar value that shows on small screens */
+.mobileBarValue {
+  display: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ifm-color-primary-darker);
+}
+
+/* Title for the metrics section */
+.performanceMetricsWrapper {
+  margin-top: 4rem;
+  text-align: center;
+}
+
+.metricsTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  background: linear-gradient(45deg, #0051ff, #6601ea);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Enhanced mobile responsiveness for the performance section */
+@media screen and (max-width: 768px) {
+  .barLabelContainer {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .barLabel {
+    width: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: auto;
+  }
+  
+  .barValue {
+    display: none; /* Hide desktop values on mobile */
+  }
+  
+  .mobileBarValue {
+    display: block; /* Show mobile values */
+  }
+  
+  .barComment {
+    top: -25px;
+    right: 10px;
+    transform: rotate(-3deg);
+  }
+  
+  .barWrapper {
+    height: 25px; /* Smaller height on mobile */
+  }
+  
+  /* Ensure metrics look good on tablets */
+  .performanceMetrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .metricBox {
+    width: auto;
+    height: 100%;
+  }
+}
+
+/* Small mobile optimization */
+@media screen and (max-width: 480px) {
+  .performanceSection {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .performanceSection .sectionTitle {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .performanceSection .sectionSubtitle {
+    font-size: 1rem;
+  }
+  
+  .comparisonText {
+    font-size: 1rem;
+    padding: 0 0.5rem;
+  }
+  
+  .chartContainer {
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  .barGroup {
+    margin-bottom: 1.75rem;
+  }
+  
+  .barLabel {
+    font-size: 0.9rem;
+  }
+  
+  .bossLabel {
+    font-size: 0.7rem;
+  }
+  
+  .mobileBarValue {
+    font-size: 0.8rem;
+  }
+  
+  .barWrapper {
+    height: 20px;
+  }
+  
+  .barComment {
+    top: -22px;
+    right: 5px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  
+  /* Stack metrics in one column on very small screens */
+  .performanceMetrics {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  .metricsTitle {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .metricBox {
+    padding: 1.2rem;
+    max-width: 100%;
+  }
+  
+  .metricValue {
+    font-size: 2.5rem;
+  }
+  
+  .metricLabel {
+    font-size: 0.8rem;
+  }
+  
+  .metricSubtext {
+    font-size: 0.85rem;
+  }
+  
+  /* Improved memory savings section for small screens */
+  .memorySavings {
+    padding: 1.2rem;
+    margin: 1.5rem auto;
+  }
+  
+  .memorySavingsTitle {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .memorySavingsContent {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .memorySavingsIcon {
+    margin-bottom: 1rem;
+  }
+  
+  .largeIcon {
+    font-size: 3rem;
+  }
+  
+  .memorySavingsText {
+    font-size: 0.9rem;
+  }
+  
+  .performanceCTA {
+    margin-top: 2rem;
+  }
+  
+  .ctaBold {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
 }

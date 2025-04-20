@@ -1,0 +1,6 @@
+# Allow all web crawlers to access all content
+User-agent: *
+Allow: /
+
+# Indicate where the sitemap is located
+Sitemap: https://bosonframework.vercel.app/sitemap.xml
