@@ -68,7 +68,7 @@ const config: Config = {
     },
     footer: {
       style: "light",
-      copyright: `Copyright © ${new Date().getFullYear()} Boson Framework. Built with ❤️ by Siddhant in India(🇮🇳).`,
+      copyright: `Copyright © ${new Date().getFullYear()} Boson Framework. Built with ❤️ by Siddhant in Bihar.`,
     },
     prism: {
       theme: prismThemes.github,
