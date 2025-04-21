@@ -73,8 +73,6 @@ int main() {
 }`;
 
 function HeroSection() {
-
-
   return (
     <header className={styles.hero}>
       <div className={styles.heroInner}>
@@ -89,6 +87,12 @@ function HeroSection() {
           <p className={styles.heroSubtitle}>
             Build blazing-fast APIs and applications with the raw power of C++ and an elegant, Express.js-inspired syntax
           </p>
+          <div className={styles.heroVideo}>
+            <video width="100%" controls>
+              <source src="https://gkh-images.s3.amazonaws.com/boson.mov" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
           <div className={styles.heroButtons}>
             <Link
               className={clsx('button button--primary button--lg', styles.primaryButton)}

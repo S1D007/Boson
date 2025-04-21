@@ -6,6 +6,13 @@
 [![C++: 17](https://img.shields.io/badge/C%2B%2B-17-green.svg)](https://en.cppreference.com/w/cpp/17)
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://bosonframework.vercel.app/docs)
 
+<p align="center">
+  <video width="100%" controls autoplay muted playsinlines>
+    <source src="https://gkh-images.s3.amazonaws.com/boson.mov" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
 **Boson** is a blazing-fast, modern web framework for C++17. Build scalable APIs and web applications with the raw power of C++, a clean developer experience, and zero runtime bloat.
 
 > Think **Express.js**, but C++ fast.
