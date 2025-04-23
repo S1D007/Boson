@@ -6,11 +6,33 @@ CLI_NAME="boson"
 INSTALL_DIR="$HOME/.local/bin"
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+ARCH="$(uname -m)"
+
+# Normalize architecture names
+case "$ARCH" in
+  x86_64) ARCH_NORMALIZED="amd64" ;;
+  i*86) ARCH_NORMALIZED="386" ;;
+  aarch64|arm64) ARCH_NORMALIZED="arm64" ;;
+  armv7*|armv8*) ARCH_NORMALIZED="arm" ;;
+  *) ARCH_NORMALIZED="$ARCH" ;;
+esac
+
 case "$OS" in
-  darwin) ASSET="boson-macos.tar.gz" ;;
-  linux) ASSET="boson-linux.tar.gz" ;;
+  darwin) 
+    if [ "$ARCH_NORMALIZED" = "arm64" ]; then
+      ASSET="boson-macos-arm64.tar.gz"
+    else
+      ASSET="boson-macos-amd64.tar.gz"
+    fi
+    ;;
+  linux) 
+    ASSET="boson-linux-${ARCH_NORMALIZED}.tar.gz"
+    ;;
   *) echo "Unsupported OS: $OS" && exit 1 ;;
 esac
+
+echo "Detected OS: $OS, Architecture: $ARCH (normalized to $ARCH_NORMALIZED)"
+echo "Using asset: $ASSET"
 
 if ! command -v jq >/dev/null 2>&1; then
   if [[ "$OS" == "darwin" ]]; then
@@ -28,8 +50,24 @@ if [ ! -w "$INSTALL_DIR" ]; then
 fi
 
 TMPDIR=$(mktemp -d)
-curl -L "https://github.com/$REPO/releases/download/$TAG/$ASSET" -o "$TMPDIR/$ASSET"
-tar -xzf "$TMPDIR/$ASSET" -C "$TMPDIR"
+echo "Downloading from: https://github.com/$REPO/releases/download/$TAG/$ASSET"
+curl -L "https://github.com/$REPO/releases/download/$TAG/$ASSET" -o "$TMPDIR/$ASSET" || {
+  echo "Failed to download $ASSET"
+  echo "Trying fallback to boson-$OS.tar.gz..."
+  FALLBACK_ASSET="boson-$OS.tar.gz"
+  curl -L "https://github.com/$REPO/releases/download/$TAG/$FALLBACK_ASSET" -o "$TMPDIR/$FALLBACK_ASSET" || {
+    echo "Error: Failed to download Boson CLI for your platform"
+    echo "Please check if your architecture ($ARCH / $ARCH_NORMALIZED) is supported"
+    echo "You can build from source instead: https://bosonframework.vercel.app/docs/getting-started/installation"
+    exit 1
+  }
+  ASSET=$FALLBACK_ASSET
+}
+
+tar -xzf "$TMPDIR/$ASSET" -C "$TMPDIR" || {
+  echo "Error extracting archive. The downloaded file may be corrupted or in an unexpected format."
+  exit 1
+}
 
 if [ -w "$INSTALL_DIR" ]; then
   mv "$TMPDIR/$CLI_NAME" "$INSTALL_DIR/$CLI_NAME"
