@@ -1,45 +1,68 @@
 #!/bin/bash
+set -e
 
-$repo = "S1D007/boson"
-$cliName = "boson.exe"
-$installDir = "$env:USERPROFILE\.boson\bin"
-$asset = "boson-windows.zip"
+REPO="S1D007/boson"
+CLI_NAME="boson"
+INSTALL_DIR="$HOME/.local/bin"
 
-$tag = (Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest").tag_name
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+case "$OS" in
+  darwin) ASSET="boson-macos.tar.gz" ;;
+  linux) ASSET="boson-linux.tar.gz" ;;
+  *) echo "Unsupported OS: $OS" && exit 1 ;;
+esac
 
-New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+if ! command -v jq >/dev/null 2>&1; then
+  if [[ "$OS" == "darwin" ]]; then
+    brew install jq
+  else
+    sudo apt-get update && sudo apt-get install -y jq
+  fi
+fi
 
-$tmp = New-TemporaryFile
-$zipPath = "$($tmp.FullName).zip"
-Invoke-WebRequest -Uri "https://github.com/$repo/releases/download/$tag/$asset" -OutFile $zipPath
-Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
-Remove-Item $zipPath
+TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name)
+mkdir -p "$INSTALL_DIR"
 
-if (-not ($env:PATH -like "*$installDir*")) {
-    $currentPath = [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::User)
-    if (-not ($currentPath -like "*$installDir*")) {
-        [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$installDir", [EnvironmentVariableTarget]::User)
-    }
-}
+if [ ! -w "$INSTALL_DIR" ]; then
+  sudo mkdir -p "$INSTALL_DIR"
+fi
 
-$profilePath = $PROFILE
-if (-not (Test-Path $profilePath)) {
-    New-Item -ItemType File -Path $profilePath -Force | Out-Null
-}
+TMPDIR=$(mktemp -d)
+curl -L "https://github.com/$REPO/releases/download/$TAG/$ASSET" -o "$TMPDIR/$ASSET"
+tar -xzf "$TMPDIR/$ASSET" -C "$TMPDIR"
 
-$autoUpdateSnippet = @"
-# Boson CLI auto-update
-if (Get-Command boson -ErrorAction SilentlyContinue) {
-    boson update | Out-Null
-}
-"@
+if [ -w "$INSTALL_DIR" ]; then
+  mv "$TMPDIR/$CLI_NAME" "$INSTALL_DIR/$CLI_NAME"
+  chmod +x "$INSTALL_DIR/$CLI_NAME"
+  if [ -d "$TMPDIR/templates" ]; then
+    cp -r "$TMPDIR/templates" "$INSTALL_DIR/templates"
+  fi
+else
+  sudo mv "$TMPDIR/$CLI_NAME" "$INSTALL_DIR/$CLI_NAME"
+  sudo chmod +x "$INSTALL_DIR/$CLI_NAME"
+  if [ -d "$TMPDIR/templates" ]; then
+    sudo cp -r "$TMPDIR/templates" "$INSTALL_DIR/templates"
+  fi
+fi
 
-$profileContent = Get-Content $profilePath -Raw
+rm -rf "$TMPDIR"
 
-if (-not ($profileContent -like "*Boson CLI auto-update*")) {
-    Add-Content -Path $profilePath -Value $autoUpdateSnippet
-}
+echo "Boson CLI installed successfully!"
+echo "Run 'boson --help' to get started."
 
-Write-Host "`n✅ Boson CLI installed successfully!"
-Write-Host "Run 'boson --help' to get started."
-Write-Host "➡️  PATH updated. Restart your terminal for changes to take effect."
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+  echo ""
+  echo "⚠️  The CLI install directory ($INSTALL_DIR) is not in your PATH."
+  echo "   To fix this, add the following line to your shell config (e.g., ~/.bashrc or ~/.zshrc):"
+  echo "     export PATH=\"\$PATH:$INSTALL_DIR\""
+  echo ""
+fi
+
+echo ""
+echo "📦 Optional: To enable auto-update, add the following snippet to your shell config:"
+echo ""
+echo "  # Boson CLI auto-update"
+echo "  if command -v boson >/dev/null 2>&1; then"
+echo "    boson update >/dev/null 2>&1"
+echo "  fi"
+echo ""
