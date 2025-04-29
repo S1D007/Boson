@@ -62,6 +62,8 @@
         "unordered_map": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "list": "cpp",
+        "source_location": "cpp"
     }
 }

@@ -285,6 +285,53 @@ class Server::Impl
         }
 
         Response response;
+        
+        bool isStreamingResponse = false;
+        bool hasStreamingStarted = false;
+        
+        response.setStreamCallback([&](const std::string& chunk) {
+            isStreamingResponse = true;
+            
+            if (!hasStreamingStarted) {
+                hasStreamingStarted = true;
+                
+                std::string headers;
+                std::stringstream ss;
+
+                auto responseHeaders = response.getHeaders();
+
+                ss << "HTTP/1.1 " << response.getStatusCode() << " ";
+                
+                auto statusTextIt = responseHeaders.find("Status-Text");
+                if (statusTextIt != responseHeaders.end()) {
+                    ss << statusTextIt->second;
+                } else {
+                    switch(response.getStatusCode()) {
+                        case 200: ss << "OK"; break;
+                        case 201: ss << "Created"; break;
+                        case 204: ss << "No Content"; break;
+                        case 400: ss << "Bad Request"; break;
+                        case 404: ss << "Not Found"; break;
+                        case 500: ss << "Internal Server Error"; break;
+                        default: ss << "Unknown"; break;
+                    }
+                }
+                ss << "\r\n";
+
+                for (const auto& header : responseHeaders) {
+                    if (header.first != "Status-Text") {
+                        ss << header.first << ": " << header.second << "\r\n";
+                    }
+                }
+
+                ss << "\r\n";
+                headers = ss.str();
+                
+                send(clientSocket, headers.c_str(), headers.length(), 0);
+            }
+            
+            send(clientSocket, chunk.c_str(), chunk.length(), 0);
+        });
 
         try
         {
@@ -302,7 +349,6 @@ class Server::Impl
         }
         catch (const std::exception& e)
         {
-
             if (errorHandler)
             {
                 errorHandler(e, request, response);
@@ -313,8 +359,10 @@ class Server::Impl
             }
         }
 
-        std::string rawResponse = response.getRawResponse();
-        send(clientSocket, rawResponse.c_str(), rawResponse.length(), 0);
+        if (!isStreamingResponse) {
+            std::string rawResponse = response.getRawResponse();
+            send(clientSocket, rawResponse.c_str(), rawResponse.length(), 0);
+        }
     }
 
     ErrorHandler errorHandler;

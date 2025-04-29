@@ -9,6 +9,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <filesystem>
+#include <fstream>
+#include <functional>
 
 namespace boson
 {
@@ -57,6 +60,61 @@ class Response
      * @return Reference to this response for method chaining
      */
     Response& jsonArray(std::initializer_list<nlohmann::json> items);
+
+    /**
+     * @brief Send a file as the response
+     * @param path Path to the file to send
+     * @param options Optional map containing options for the file response
+     * @return Reference to this response for method chaining
+     */
+    Response& sendFile(const std::string& path, 
+                      const std::map<std::string, std::any>& options = {});
+
+    /**
+     * @brief Send a file as a downloadable attachment
+     * @param path Path to the file to send
+     * @param filename Optional filename to use for the download (default: original filename)
+     * @param options Optional map containing additional options for the file response
+     * @return Reference to this response for method chaining
+     */
+    Response& download(const std::string& path, const std::string& filename = "",
+                      const std::map<std::string, std::any>& options = {});
+
+    /**
+     * @brief Stream a file as the response
+     * @param path Path to the file to stream
+     * @param options Optional map containing options for the file streaming
+     * @return Reference to this response for method chaining
+     */
+    Response& streamFile(const std::string& path,
+                        const std::map<std::string, std::any>& options = {});
+
+    /**
+     * @brief Enable/disable streaming mode for large responses
+     * @param enable Whether to enable streaming
+     * @return Reference to this response for method chaining
+     */
+    Response& stream(bool enable = true);
+
+    /**
+     * @brief Write a chunk of data in streaming mode
+     * @param chunk The data chunk to write
+     * @return Reference to this response for method chaining
+     */
+    Response& write(const std::string& chunk);
+
+    /**
+     * @brief End the streaming response
+     * @return Reference to this response for method chaining
+     */
+    Response& end();
+
+    /**
+     * @brief Enable/disable compression for the response
+     * @param enable Whether to enable compression
+     * @return Reference to this response for method chaining
+     */
+    Response& compress(bool enable = true);
 
     /**
      * @brief Set the status code
@@ -166,9 +224,23 @@ class Response
      */
     std::string getBody() const;
 
+    /**
+     * @brief Set the stream callback function for handling streaming responses
+     * @param callback The callback function that takes a string chunk and sends it
+     * @return Reference to this response for method chaining
+     */
+    Response& setStreamCallback(std::function<void(const std::string&)> callback);
+
   private:
     class Impl;
     std::unique_ptr<Impl> pimpl;
+    
+    /**
+     * @brief Detect MIME type based on file extension
+     * @param path Path to the file
+     * @return MIME type string
+     */
+    std::string detectMimeType(const std::string& path) const;
 };
 
 } // namespace boson

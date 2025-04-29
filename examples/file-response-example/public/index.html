@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boson File Response Example</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f9fc;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        p {
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Boson Framework File Response Example</h1>
+    
+    <p>This is a static HTML file served by the Boson Framework's StaticFiles middleware.</p>
+    
+    <p>Visit <a href="/" class="button">API Demo Home</a> to see all the file response examples.</p>
+    
+    <p>
+        This example demonstrates how to:
+    </p>
+    <ul>
+        <li>Send files with proper MIME type detection</li>
+        <li>Force file downloads with Content-Disposition</li>
+        <li>Stream large files efficiently</li>
+        <li>Use ETags and Last-Modified for caching</li>
+        <li>Implement range requests for partial content</li>
+    </ul>
+    
+    <p>The API is based on Express.js-like patterns but implemented in modern C++.</p>
+</body>
+</html>

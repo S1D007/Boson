@@ -31,6 +31,7 @@ if(BOSON_BUILD_EXAMPLES)
     add_subdirectory(examples/file-upload-example)
     add_subdirectory(examples/middleware-examples)
     add_subdirectory(examples/cookie-example)
+    add_subdirectory(examples/file-response-example)
 endif()
 
 # Optionally build tests
