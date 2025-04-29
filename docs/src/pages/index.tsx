@@ -15,32 +15,32 @@ import styles from './index.module.css';
 const features = [
   {
     title: 'High Performance',
-    description: 'Process over 100,000 requests per second with ultra-low latency',
+    description: 'Process over 100,000 requests per second with ultra-low latency. Engineered for speed from the ground up.',
     icon: <SlSpeedometer className={styles.featureIcon} />,
   },
   {
     title: 'Modern C++ (17/20)',
-    description: 'Leverage the latest C++ features for safer, cleaner code',
+    description: 'Built with the latest C++ features for safer, cleaner, and more maintainable code.',
     icon: <FiCode className={styles.featureIcon} />,
   },
   {
     title: 'Express-Inspired API',
-    description: 'Familiar syntax makes web development in C++ accessible',
+    description: 'Familiar syntax makes web development in C++ accessible, even to those coming from JavaScript.',
     icon: <BsCodeSquare className={styles.featureIcon} />,
   },
   {
     title: 'Memory Efficient',
-    description: 'Fraction of the memory footprint of JavaScript or Python frameworks',
+    description: 'Only a fraction of the memory footprint compared to JavaScript or Python frameworks.',
     icon: <HiOutlineChip className={styles.featureIcon} />,
   },
   {
     title: 'Built-in Middleware',
-    description: 'Easily extend request processing with global or route-specific middleware',
+    description: 'Easily extend request processing with global or route-specific middleware for modular architecture.',
     icon: <FiLayers className={styles.featureIcon} />,
   },
   {
     title: 'Production Ready',
-    description: 'Comprehensive error handling and logging for reliability',
+    description: 'Comprehensive error handling, logging, and security features for robust production deployments.',
     icon: <FiShield className={styles.featureIcon} />,
   },
 ];
@@ -85,7 +85,7 @@ function HeroSection() {
             High-Performance Web Framework for Modern C++
           </Heading>
           <p className={styles.heroSubtitle}>
-            Build blazing-fast APIs and applications with the raw power of C++ and an elegant, Express.js-inspired syntax
+            Build blazing-fast APIs and web applications with the raw power of C++ and an elegant, Express.js-inspired syntax
           </p>
           <div className={styles.heroVideo}>
             <video width="100%" controls>
@@ -168,7 +168,7 @@ function CodeSection() {
         <div className={styles.sectionHeader}>
           <Heading as="h2" className={styles.sectionTitle}>Elegant, Express-Inspired API</Heading>
           <p className={styles.sectionSubtitle}>
-            Write beautiful, maintainable C++ code that feels like modern web frameworks
+            Write beautiful, maintainable C++ code that feels like modern web frameworks while keeping all the performance benefits
           </p>
         </div>
         <div className={styles.codeContainer}>
@@ -196,17 +196,17 @@ function PerformanceSection() {
     <section className={styles.performanceSection}>
       <div className="container">
         <div className={styles.sectionHeader}>
-          <Heading as="h2" className={styles.sectionTitle}>Destroying the Competition</Heading>
+          <Heading as="h2" className={styles.sectionTitle}>CRUSHING THE COMPETITION</Heading>
           <p className={styles.sectionSubtitle}>
-            While other frameworks struggle to keep up, Boson absolutely crushes them with raw, unmatched power
+            While other frameworks struggle with basic loads, Boson delivers raw, unmatched power for the most demanding applications
           </p>
         </div>
         
         <div className={styles.comparisonIntro}>
           <p className={styles.comparisonText}>
-            <span className={styles.textHighlight}>Face it</span> - your current tech stack is holding you back. 
+            <span className={styles.textHighlight}>Face it</span> — your current tech stack is holding you back. 
             Why settle for frameworks that <span className={styles.textDanger}>choke under pressure</span> when Boson handles 
-            what others can't even dream of?
+            what others can only <span className={styles.textHighlight}>dream of achieving?</span>
           </p>
         </div>
         
@@ -214,24 +214,24 @@ function PerformanceSection() {
           <div className={styles.metricBox}>
             <div className={styles.metricValue}>20x</div>
             <div className={styles.metricLabel}>FASTER THAN PYTHON</div>
-            <div className={styles.metricSubtext}>While they're still processing the first request, we've handled twenty.</div>
+            <div className={styles.metricSubtext}>While they're still processing the first request, you've already handled twenty with Boson.</div>
           </div>
           
           <div className={styles.metricBox}>
             <div className={styles.metricValue}>8x</div>
             <div className={styles.metricLabel}>FASTER THAN NODE.JS</div>
-            <div className={styles.metricSubtext}>Stop waiting for your event loop and get real performance.</div>
+            <div className={styles.metricSubtext}>Stop waiting for your event loop and experience true performance without compromise.</div>
           </div>
           
           <div className={styles.metricBox}>
             <div className={styles.metricValue}>3x</div>
             <div className={styles.metricLabel}>FASTER THAN GO</div>
-            <div className={styles.metricSubtext}>So much for Go's speed claims. C++ shows who's boss.</div>
+            <div className={styles.metricSubtext}>Even Go's celebrated speed can't match C++'s raw power in Boson's optimized architecture.</div>
           </div>
         </div>
         
         <div className={styles.memorySavings}>
-          <h3 className={styles.memorySavingsTitle}>And Memory? It's Not Even a Contest.</h3>
+          <h3 className={styles.memorySavingsTitle}>And Memory Usage? It's Not Even a Contest.</h3>
           <div className={styles.memorySavingsContent}>
             <div className={styles.memorySavingsIcon}>
               <HiOutlineChip className={styles.largeIcon} />
@@ -239,18 +239,9 @@ function PerformanceSection() {
             <div className={styles.memorySavingsText}>
               <p>While Python and Node.js bloat to <span className={styles.textDanger}>hundreds of MB</span> of RAM, 
               Boson delivers the same functionality in just <span className={styles.textSuccess}>3MB</span>.</p>
-              <p>Cut your server costs by 90%. Run 10x more instances on the same hardware.</p>
+              <p>Cut your server costs by 90%. Run 10x more instances on the same hardware. Scale further than ever before.</p>
             </div>
           </div>
-        </div>
-        
-        <div className={styles.performanceCTA}>
-          <p className={styles.ctaBold}>Stop wasting money on inferior tech.</p>
-          <Link
-            className={clsx('button button--primary button--lg', styles.primaryButton)}
-            to="/docs/introduction/why-boson">
-            See All Benchmarks <FiArrowRight className={styles.buttonIconRight} />
-          </Link>
         </div>
       </div>
     </section>
@@ -261,25 +252,25 @@ function UseCasesSection() {
   const useCases = [
     {
       title: 'High-Volume APIs',
-      description: 'Handle millions of requests with minimal resources',
+      description: 'Handle millions of requests with minimal resources. Perfect for high-traffic APIs where every millisecond counts.',
       icon: <FiServer />,
       color: '#0066ff',
     },
     {
       title: 'Gaming Backends',
-      description: 'Process real-time events with ultra-low latency',
+      description: 'Process real-time events with ultra-low latency for responsive multiplayer experiences and game services.',
       icon: <FiCpu />,
       color: '#9900ff',
     },
     {
       title: 'Trading Systems',
-      description: 'Execute time-sensitive financial operations',
+      description: 'Execute time-sensitive financial operations with the reliability and speed that C++ is known for.',
       icon: <FiZap />,
       color: '#ff3300',
     },
     {
       title: 'IoT Applications',
-      description: 'Optimize for constrained environments',
+      description: 'Optimize for constrained environments where resources are limited but performance demands are high.',
       icon: <HiOutlineChip />,
       color: '#00cc66',
     },
@@ -316,7 +307,7 @@ function GettingStartedSection() {
         <div className={styles.sectionHeader}>
           <Heading as="h2" className={styles.sectionTitle}>Get Started in Minutes</Heading>
           <p className={styles.sectionSubtitle}>
-            Boson makes it easy to start building high-performance web applications
+            Boson makes it easy to start building high-performance web applications with a simple setup process
           </p>
         </div>
         <div className={styles.stepsContainer}>

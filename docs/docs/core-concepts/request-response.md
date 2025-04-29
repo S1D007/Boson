@@ -613,66 +613,98 @@ void handleRedirects(const boson::Request& req, boson::Response& res) {
 
 ### Response Streaming
 
-For large responses, you can use streaming:
+For large responses, you can use streaming to send data in chunks, which helps with:
+- Managing memory efficiently when handling large files
+- Delivering content to clients faster by sending available data immediately
+- Supporting real-time data that's generated over time
+
+#### Basic Streaming Example
 
 ```cpp
 void handleRequest(const boson::Request& req, boson::Response& res) {
     // Start a streaming response
-    auto stream = res.stream();
+    res.header("Content-Type", "text/plain");
+    res.stream(true);
     
     // Write data in chunks
-    stream->write("Chunk 1");
-    stream->write("Chunk 2");
+    res.write("Chunk 1");
+    res.write("Chunk 2");
     
     // End the stream
-    stream->end();
+    res.end();
 }
 ```
 
-### Streaming Large Files or Data
+#### Streaming Files
+
+Boson provides several convenient ways to stream files:
+
+##### Automatic Streaming for Large Files
+
+By default, Boson automatically uses streaming for files larger than 1MB:
 
 ```cpp
-void streamLargeFile(const boson::Request& req, boson::Response& res) {
-    // Set appropriate headers for streaming
-    res.header("Content-Type", "text/plain");
-    res.header("Transfer-Encoding", "chunked");
-    
-    // Get a stream
-    auto stream = res.stream();
-    
-    // Open a file (using standard C++ file handling)
-    std::ifstream file("/path/to/large-file.txt", std::ios::binary);
-    if (!file) {
-        res.status(404).send("File not found");
-        return;
-    }
-    
-    // Read and stream the file in chunks
-    const size_t bufferSize = 4096;
-    char buffer[bufferSize];
-    
-    while (file.read(buffer, bufferSize)) {
-        stream->write(std::string(buffer, file.gcount()));
-    }
-    
-    // Write any remaining data
-    if (file.gcount() > 0) {
-        stream->write(std::string(buffer, file.gcount()));
-    }
-    
-    // Close the stream
-    stream->end();
+void sendLargeFile(const boson::Request& req, boson::Response& res) {
+    // Will automatically use streaming for files larger than 1MB
+    res.sendFile("/path/to/large-file.dat");
 }
+```
 
+##### Explicit File Streaming
+
+You can explicitly choose to stream any file regardless of size:
+
+```cpp
+void explicitStreamFile(const boson::Request& req, boson::Response& res) {
+    // Explicitly use streaming for any file
+    std::map<std::string, std::any> options = {
+        {"stream", true}
+    };
+    res.streamFile("/path/to/file.txt", options);
+}
+```
+
+##### Customizing Streaming Behavior
+
+Customize chunk size for fine-tuning performance:
+
+```cpp
+void customizedStreaming(const boson::Request& req, boson::Response& res) {
+    // Set a custom chunk size (in bytes)
+    std::map<std::string, std::any> options = {
+        {"stream", true},
+        {"chunkSize", static_cast<size_t>(4096)}  // 4KB chunks
+    };
+    res.streamFile("/path/to/file.dat", options);
+}
+```
+
+#### File Download with Streaming
+
+For file downloads, you can combine streaming with download headers:
+
+```cpp
+void streamedDownload(const boson::Request& req, boson::Response& res) {
+    // Streaming file download with custom filename
+    std::map<std::string, std::any> options = {
+        {"stream", true}
+    };
+    res.download("/path/to/report.pdf", "monthly-report-april-2025.pdf", options);
+}
+```
+
+#### Streaming Dynamically Generated Content
+
+Stream data as it's being generated:
+
+```cpp
 void streamGeneratedData(const boson::Request& req, boson::Response& res) {
     // For data that's generated on the fly
     res.header("Content-Type", "application/json");
-    res.header("Transfer-Encoding", "chunked");
-    
-    auto stream = res.stream();
+    res.stream(true);
     
     // Start JSON array
-    stream->write("[");
+    res.write("[");
     
     // Generate and stream items one by one
     for (int i = 0; i < 1000; i++) {
@@ -684,17 +716,84 @@ void streamGeneratedData(const boson::Request& req, boson::Response& res) {
         };
         
         // Write item, with comma if it's not the last one
-        stream->write(item.dump() + (i < 999 ? "," : ""));
+        res.write(item.dump() + (i < 999 ? "," : ""));
         
         // In a real app, you might add a delay or check for client disconnection
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     
-    // End JSON array
-    stream->write("]");
-    stream->end();
+    // End JSON array and complete the response
+    res.write("]");
+    res.end();
 }
 ```
+
+#### Streaming Large Files or Data with Low Memory Usage
+
+When handling very large files, you can stream them with minimal memory overhead:
+
+```cpp
+void streamLargeFile(const boson::Request& req, boson::Response& res) {
+    // Set appropriate headers for streaming
+    res.header("Content-Type", "application/octet-stream");
+    res.stream(true);
+    
+    // Open a file (using standard C++ file handling)
+    std::ifstream file("/path/to/very-large-file.bin", std::ios::binary);
+    if (!file) {
+        res.status(404).send("File not found");
+        return;
+    }
+    
+    // Read and stream the file in chunks
+    const size_t bufferSize = 8192;  // 8KB chunks
+    char buffer[bufferSize];
+    
+    while (file.read(buffer, bufferSize)) {
+        res.write(std::string(buffer, file.gcount()));
+    }
+    
+    // Write any remaining data
+    if (file.gcount() > 0) {
+        res.write(std::string(buffer, file.gcount()));
+    }
+    
+    // Close the stream
+    res.end();
+}
+```
+
+#### Behind the Scenes: How Streaming Works
+
+When you use streaming in Boson:
+
+1. Boson sets `Transfer-Encoding: chunked` in the HTTP headers
+2. Each chunk is sent in the HTTP chunked encoding format:
+   - Size of the chunk in hexadecimal format
+   - CRLF (carriage return + line feed)
+   - The chunk data itself
+   - CRLF
+3. The final chunk is a zero-sized chunk followed by optional trailers and a final CRLF
+
+#### When to Use Streaming
+
+Use streaming when:
+
+- Sending large files (>1MB) to avoid loading the entire file into memory
+- Delivering real-time data as it becomes available
+- Building APIs for long-running processes with progressive results
+- Creating server-sent events (SSE) endpoints
+- Implementing logging or monitoring endpoints that continuously deliver data
+
+#### Performance Considerations
+
+When using streaming:
+
+- Choose an appropriate chunk size for your use case (typically 4-16KB)
+- For very large files (>100MB), always use streaming to avoid memory issues
+- Consider adding progress indication for long-running streams
+- Monitor client connections and stop processing if the client disconnects
+- Remember that streaming ties up a connection for the duration of the stream
 
 ### Compression
 

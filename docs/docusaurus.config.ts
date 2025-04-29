@@ -45,6 +45,11 @@ const config: Config = {
   ],
 
   themeConfig: {
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: false,
+      respectPrefersColorScheme: false,
+    },
     image: "img/boson-social-card.jpg",
     navbar: {
       title: "Boson",
@@ -68,7 +73,7 @@ const config: Config = {
     },
     footer: {
       style: "light",
-      copyright: `Copyright © ${new Date().getFullYear()} Boson Framework. Built with ❤️ by Siddhant in Bihar.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Boson Framework. Built with ❤️ by Siddhant.`,
     },
     prism: {
       theme: prismThemes.github,
